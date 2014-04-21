@@ -1,0 +1,70 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+ *
+ */
+
+#include "main.h"
+
+#define POTCHAN 0
+#define POTANGLE 300
+
+void printArmData(unsigned short ADCValue);
+
+
+//Create struct to store global variables (some ISR require global variables)
+Globals globals;
+
+int main() {
+	initGlobals();	//Initialize globals
+	DebugUSARTInit(DEFAULT_BAUD); //initialize USART
+	initFreeRunADC(POTCHAN); //InitializeADC for auto-conversion
+	GenericSPIInit();
+
+	DDRDbits._P4 = OUTPUT;
+
+	//Power up DAC (using internal reference)
+	PORTDbits._P4 = 0;
+	SPITransceive(0b01101111);
+	//SPITransceive(0b01111111);
+	//println("3");
+	SPITransceive(128);
+	//println("4");
+	SPITransceive(128);
+	PORTDbits._P4 = 1;
+
+
+	//max dac output is 2.5 v
+	setDAC(0,4095); //should output 1.25v
+
+	/*
+	int a = 0;
+	while(1) {
+		setDAC(0,a++);
+	}*/
+
+	//wait for start command from computer
+	println("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+	while(1) {
+		printArmData(globals.ADCValue);
+	}
+
+	return 0;
+
+}
+
+
+/*
+ * Prints the Orientation of potentiometer in ADC counts, pot output in millivolts, and arm orientation in degrees.
+ */
+void printArmData(unsigned short ADCValue) {
+	p_ul(globals.ADCValue);
+	print(",");
+	p_ul((globals.ADCValue*((float)5/1023))*1000);
+	print(",");
+	p_ul(globals.ADCValue*((float)POTANGLE/1023));
+	println("");
+}

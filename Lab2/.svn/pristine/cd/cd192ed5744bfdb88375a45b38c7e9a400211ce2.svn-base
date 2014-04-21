@@ -1,0 +1,46 @@
+/*
+* main.h
+*
+* Created on: Jul 4, 2013
+* Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+*/
+#ifndef MAIN_H_
+#define MAIN_H_
+
+#include "DAC.h"
+#include "PID.h"
+#include "RBELib/RBELib.h" //RBELib
+#include <avr/io.h> // AVR IO
+#include "autoADC.h"
+#include "globals.h"
+#include "armActuator.h"
+
+
+//ADC input channels
+#define CURRENT_SENSE_0_ADC 0
+#define CURRENT_SENSE_1_ADC 1
+#define ARM_LOW_LINK_POT 2
+#define ARM_HIGH_LINK_POT 3
+#define KP_POT 4
+#define KI_POT 5
+#define KD_POT 6
+
+#define POTANGLE 300
+#define PID_POT_MULTIPLE .01
+
+//Function prototypes
+void printArmData(unsigned short ADCValue);
+void printADCValues();
+void printPIDValues();
+
+//Program operation modes
+#define CODY_NAME_YOUR_MODE 4
+#define DAC_DEMO_MODE 5
+#define DRIVE_ARM_MODE 6 //Probably don't actually need this mode. It was just for testing. Delete it later.
+#define PID_MODE 8
+
+//current operation mode
+#define MODE PID_MODE
+
+
+#endif /* MAIN_H_ */

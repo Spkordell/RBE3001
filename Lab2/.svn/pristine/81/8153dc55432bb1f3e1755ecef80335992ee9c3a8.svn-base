@@ -1,0 +1,18 @@
+/*
+* main.h
+*
+* Created on: Jul 4, 2013
+* Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+*/
+#ifndef MAIN_H_
+#define MAIN_H_
+
+#include "DAC.h"
+#include "PID.h"
+#include "RBELib/RBELib.h" //RBELib
+#include <avr/io.h> // AVR IO
+#include "autoADC.h"
+#include "globals.h"
+#include "armActuator.h"
+
+#endif /* MAIN_H_ */

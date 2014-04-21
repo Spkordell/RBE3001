@@ -1,0 +1,28 @@
+/*
+ * globals.c
+ *
+ *  Created on: Jan 22, 2014
+ *      Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+ *
+ *      This file contains a function to initialize all the variables in the Global struct.
+ *
+ */
+
+#include "main.h"
+
+/*
+ * Initalize all the variables in the global struct
+ */
+void initGlobals() {
+	globals.timeStamp = 0;
+	globals.sampleDataAvailable = 0;
+	globals.PIDTimerMaxCount = 0;
+	globals.PIDTimerCurrentCount = 0;
+	globals.highLinkSetPoint = 0;
+	globals.ADCSampleAllChannels = 0;
+	globals.ADCValue = 0;
+	globals.highLinkPIDOut = 0;
+	for(int i = 0; i < 8; i++) {
+		globals.ADCValues[i] = 0;
+	}
+}

@@ -1,0 +1,63 @@
+/*
+ * main.h
+ *
+ *  Created on: Feb 19, 2014
+ *      Author: Steven Kordell
+ */
+
+#ifndef MAIN_H_
+#define MAIN_H_
+
+//Dependencies
+#include "DAC.h"
+#include "PID.h"
+#include <avr/io.h>
+#include <math.h>
+#include "RBELib/RBELib.h"
+#include "globals.h"
+#include "autoADC.h"
+#include "encoder.h"
+#include "kinematics.h"
+#include "armActuator.h"
+
+//Constants
+#define MOTOR_VOLTAGE 12
+
+//ADC Input Channels
+#define THAT_INFARED_SENSOR_THAT_DOES_THAT_THING_WHERE_IT_FINDS_THE_POSITION_OF_THE_BLOCK_HORIZONTALLY_ON_THE_CONVEYER_BELT_TO_SOLVE_THE_INVERSE_kINEMATIC_EQUATIONS_TO_MOVE_THE_ARM_TO_THE_BLOCK_POSITION_WHEN_THE_BLOCK_HITS_THE_INFARED_TRIGGER_SENSOR_FURHTER_DOWN_THE_CONVEYER_BELT 0
+#define ARM_LOW_LINK_POT 2
+#define ARM_HIGH_LINK_POT 3
+#define IR_TRIGGER 4
+
+//Servo Channels
+#define CONVEYER_SERVO 0
+#define GRIPPER_SERVO 1
+
+//Program Modes
+#define IR_DATA_COLLECT_MODE 0
+#define SERVO_TEST_MODE 1
+#define PRINT_FK_MODE 2
+#define FINAL_PROJECT_MODE 3
+
+#define MODE 3
+
+typedef enum {
+   INITIALIZE,
+   READYPOSITION
+} TASKSTATE;
+
+///////////////////function prototypes///////////////////
+
+////State machine control Functions
+void engageState(TASKSTATE currentState);
+TASKSTATE updateState(TASKSTATE currentState);
+
+////State Specific functions
+void initialize();
+
+////Additional Helper functions
+void startConveyer();
+void openGripper();
+void closeGripper();
+
+#endif /* MAIN_H_ */

@@ -1,0 +1,122 @@
+/*
+ * PWM.c
+ *
+ *  Created on: Jan 24, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+
+void initPWM(uint8_t port, uint8_t pin, float frequency, uint8_t duty) {
+	globals.PWMPort = port;
+	globals.PWMPin = pin;
+	// Set output direction on pin
+	switch(port) {
+	case 'A':
+		DDRA |= (1 << pin);
+		break;
+	case 'B':
+		DDRB |= (1 << pin);
+		break;
+	case 'C':
+		DDRC |= (1 << pin);
+		break;
+	case 'D':
+		DDRD |= (1 << pin);
+		break;
+
+	}
+	float timerPeriod = 1/F_CPU;
+	float desiredPeriod = 1/frequency;
+
+	//p = 2hz
+	unsigned short int count = (uint16_t)(desiredPeriod/timerPeriod) - 1;
+
+	//printfDEBUG_UL(count);
+
+	//Initialize the timer
+	InitTimer(0, CTC, 115);
+
+	DDRA = 0xFF;
+	DDRB = 0xFF;
+	DDRC = 0xFF;
+	DDRD = 0xFF;
+
+	sei();
+
+   TCCR1A = 0;
+	TCCR1B = 0;
+	TCNT1 = 0;
+	ICR1 = 0x7000;
+	OCR1A = 0x6000;
+	OCR1B = 0x3000;
+
+	    // set OC1 on at COMP
+	TCCR1Abits._COM1A1 = 1;
+    // reset OC1 at TOP
+	TCCR1Abits._COM1A0 = 1;
+   // set OC2 on at COMP
+	TCCR1Abits._COM1B1 = 1;
+  // reset OC2 at TOP
+	TCCR1Abits._COM1B0 = 1;
+
+	// mode 14: (PWM on OC1A and OC1B)
+	//   OCR1A defines COMP for PB1 (OC1A)
+	//   OCR1B defines COMP for PB2 (OC1B)
+	//   ICR1 defines TOP for both lines
+	//
+	// mode 15: (PWM on OC1B only)
+	//    OCR1B defines COMP
+	//    OCR1A defines TOP
+	//
+
+
+	TCCR1Abits._WGM10 = 1;  // -
+	TCCR1Abits._WGM11 = 1;  //  - Fast PWM
+	TCCR1Bbits._WGM12 = 1;  //  - Fast PWM
+	TCCR1Bbits._WGM13 = 1;  //  -
+
+	//prescaler
+	TCCR1Bbits._CS12 = 1;
+	TCCR1Bbits._CS11 = 0;
+	TCCR1Bbits._CS10 = 1;
+
+
+	//DDRBbits._P0 = OUTPUT;
+}
+
+
+ISR(TIMER1_COMPA_vect)
+{
+        DDRB = _BV (PD3);               // PB1 is digital output
+}
+
+ISR(TIMER1_OVF_vect)
+{
+         DDRB = _BV (PD4);               // PB1 is digital output
+}
+
+/*
+ISR(TIMER1_COMPA_vect) {
+	//toggle the pin
+	switch(globals.PWMPort) {
+	case 'A':
+		PORTA ^= (1 << globals.PWMPin);
+		break;
+	case 'B':
+		PORTB ^= (1 << globals.PWMPin);
+		break;
+	case 'C':
+		PORTC ^= (1 << globals.PWMPin);
+		break;
+	case 'D':
+		PORTD ^= (1 << globals.PWMPin);
+		break;
+	}
+}
+*/
+
+ISR(TIMER0_COMPA_vect) {
+		PORTB ^= (1 << 0);
+}

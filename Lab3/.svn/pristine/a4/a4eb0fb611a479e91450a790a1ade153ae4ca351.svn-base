@@ -1,0 +1,59 @@
+/*
+ * main.c
+ *
+ *  Created on: Feb 11, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+Globals globals;
+
+int main() {
+	DebugUSARTInit(DEFAULT_BAUD);
+	initGlobals();
+	println("Chip Reset");
+
+#if MODE == PRINT_ACCEL_VALUES
+	//TODO: Set SS port and pin in accelermeter.h/c current is C5
+	initAccelerometer();
+	//TODO: To test if init worked, try printing accel.vref. Should be about 2045.
+	while(1) {
+		if(accel.newDataAvailable) {
+			printf("%u\t%u\t%u\n",accel.x,accel.y,accel.z);
+			accel.newDataAvailable = 0;
+		}
+	}
+
+	/*
+	 * possibly useful conversion stuff
+	 * Cnt2Mv = 0xCE4C // counts to millivolts 0.80586 with **
+	 * GfCnv = 0x3852 g-force conversion 0.22 with **
+	 *
+	 * ex:  mVolts = accel.vref ** Cnt2MV
+	 *
+	 * signed int gforce;
+	 *  if (axist >= vref) {
+			gForce = (axis - vref) ** GfCnv // positive g-force
+		} else {
+			gForce = -((vref - axis) ** GfCnv) // negative g-force
+		}
+	 *
+	 *
+	 * x ** y = pow(x,y)
+	 *
+	 */
+
+#endif
+#if MODE == PRINT_ENCODER_VALUES
+	initEncoders();
+	while(1) {
+		p_sl(encoderCounts('H'));
+		print("\t");
+		p_sl(encoderCounts('L'));
+		println("");
+	}
+#endif
+	return 0;
+}
+

@@ -1,0 +1,88 @@
+/*
+ * armActuator.c
+ *
+ *  Created on: Jan 31, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+PidConst pidConst;
+
+void initPID(float dt) {
+	pidConst.lastError_L = 0;
+	pidConst.lastError_H = 0;
+	pidConst.sumError_L = 0;
+	pidConst.sumError_H = 0;
+	pidConst.dt = dt;
+	DDRDbits._P7 = OUTPUT;
+}
+
+void setConst(unsigned char link, float Kp, float Ki, float Kd) {
+	if (link == 'H') {
+		pidConst.Kp_H = Kp;
+		pidConst.Ki_H = Ki;
+		pidConst.Kd_H = Kd;
+	} else if(link == 'L') {
+		pidConst.Kp_L = Kp;
+		pidConst.Ki_L = Ki;
+		pidConst.Kd_L = Kd;
+	}
+}
+
+void calcPID(unsigned char link, int setPoint, int actPos) {
+	float error = setPoint - actPos;
+	if (link == 'H') {
+		pidConst.sumError_H = pidConst.sumError_H+(error*pidConst.dt);
+		if (pidConst.sumError_H > SUM_ERROR_MAX) {
+			pidConst.sumError_H = SUM_ERROR_MAX;
+		}
+		if (pidConst.sumError_H < -SUM_ERROR_MAX) {
+			pidConst.sumError_H = -SUM_ERROR_MAX;
+		}
+		float derivative = (error-pidConst.lastError_H)/pidConst.dt;
+		pidConst.lastError_H = error;
+		globals.highLinkPIDOut = pidConst.Kp_H*error + pidConst.Ki_H*pidConst.sumError_H + pidConst.Kd_H*derivative;
+		if (globals.highLinkPIDOut > DAC_MAX_VALUE) {
+			globals.highLinkPIDOut = DAC_MAX_VALUE;
+		}
+		if (globals.highLinkPIDOut < -1*DAC_MAX_VALUE) {
+			globals.highLinkPIDOut = -1*DAC_MAX_VALUE;
+		}
+	} else if (link == 'L') {
+		pidConst.sumError_L = pidConst.sumError_L+(error*pidConst.dt);
+		if (pidConst.sumError_L > SUM_ERROR_MAX) {
+			pidConst.sumError_L = SUM_ERROR_MAX;
+		}
+		if (pidConst.sumError_L < -SUM_ERROR_MAX) {
+			pidConst.sumError_L = -SUM_ERROR_MAX;
+		}
+		float derivative = (error-pidConst.lastError_L)/pidConst.dt;
+		pidConst.lastError_L = error;
+		globals.lowLinkPIDOut = pidConst.Kp_L*error + pidConst.Ki_L*pidConst.sumError_L + pidConst.Kd_L*derivative;
+		if (globals.lowLinkPIDOut > DAC_MAX_VALUE) {
+			globals.lowLinkPIDOut = DAC_MAX_VALUE;
+		}
+		if (globals.lowLinkPIDOut < -1*DAC_MAX_VALUE) {
+			globals.lowLinkPIDOut = -1*DAC_MAX_VALUE;
+		}
+	}
+}
+
+void startPID() {
+	globals.PIDTimerMaxCount = (F_CPU/36864)*((float)1/100);
+	globals.PIDTimerCurrentCount = 0;
+	InitTimer(1,CTC,36864);
+}
+
+ISR(TIMER1_COMPA_vect) {
+	if(globals.PIDTimerCurrentCount >= globals.PIDTimerMaxCount) {
+		PORTDbits._P7 = ~PORTCbits._P7; //Toggle a pin for frequency checking
+		globals.PIDTimerCurrentCount = 0;
+		calcPID('H',globals.highLinkSetPoint,globals.ADCValues[ARM_HIGH_LINK_POT]);
+		calcPID('L',globals.lowLinkSetPoint,globals.ADCValues[ARM_LOW_LINK_POT]);
+		driveLinks();
+	} else {
+		globals.PIDTimerCurrentCount++;
+	}
+}

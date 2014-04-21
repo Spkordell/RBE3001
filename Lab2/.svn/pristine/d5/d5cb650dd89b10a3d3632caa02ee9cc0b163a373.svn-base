@@ -1,0 +1,47 @@
+/*
+ * armActuator.c
+ *
+ *  Created on: Jan 31, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+PidConst pidConst;
+
+void initPID(float dt) {
+	pidConst.lastError_L = 0;
+	pidConst.lastError_H = 0;
+	pidConst.sumError_L = 0;
+	pidConst.sumError_H = 0;
+	pidConst.dt = dt;
+}
+
+void setConst(unsigned char link, float Kp, float Ki, float Kd) {
+	if (link == 'H') {
+		pidConst.Kp_H = Kp;
+		pidConst.Kp_H = Ki;
+		pidConst.Kp_H = Kd;
+	} else if(link == 'L') {
+		pidConst.Kp_L = Kp;
+		pidConst.Kp_L = Ki;
+		pidConst.Kp_L = Kd;
+	}
+}
+
+int calcPID(unsigned char link, int setPoint, int actPos, float Kp, float Ki, float Kd) {
+	int error = setPoint - actPos;
+	if (link == 'H') {
+		pidConst.sumError_H = pidConst.sumError_H+(error*pidConst.dt);
+		float derivative = (error-pidConst.lastError_H)/pidConst.dt;
+		pidConst.lastError_H = error;
+		return pidConst.Kp_H*error + pidConst.Ki_H*pidConst.sumError_H + pidConst.Kd_H*derivative;
+	} else if (link == 'L') {
+		pidConst.sumError_L = pidConst.sumError_L+(error*pidConst.dt);
+		float derivative = (error-pidConst.lastError_L)/pidConst.dt;
+		pidConst.lastError_L = error;
+		return pidConst.Kp_L*error + pidConst.Ki_L*pidConst.sumError_L + pidConst.Kd_L*derivative;
+	} else {
+		return 0;
+	}
+}

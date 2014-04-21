@@ -1,0 +1,13 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+int main() {
+	InitADC(4);
+	return 0;
+}

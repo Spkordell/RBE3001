@@ -1,0 +1,23 @@
+/*
+ * accelerometer.h
+ *
+ *  Created on: Feb 12, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#ifndef ACCELEROMETER_H_
+#define ACCELEROMETER_H_
+
+#include "main.h"
+
+typedef struct {
+	volatile uint16_t x;
+	volatile uint16_t y;
+	volatile uint16_t z;
+	volatile uint8_t newDataAvailable;
+	volatile uint8_t timerMaxCount;
+	volatile uint8_t timerCurrentCount;
+} Accel;
+
+#endif /* ACCELEROMETER_H_ */

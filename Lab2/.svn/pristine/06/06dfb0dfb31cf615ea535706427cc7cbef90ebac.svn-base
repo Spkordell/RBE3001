@@ -1,0 +1,134 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+ *
+ */
+
+#include "main.h"
+
+Globals globals;
+
+int main() {
+	initGlobals();	//Initialize globals
+	DebugUSARTInit(DEFAULT_BAUD); //initialize USART
+	println("Chip Reset");
+
+#if MODE == CODY_NAME_YOUR_MODE
+	initFreeRunADC(CURRENT_SENSE_0); //InitializeADC for auto-conversion
+	//wait for start command from computer
+	println("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+	while(1) {
+		printArmData(globals.ADCValue);
+	}
+#endif
+
+#if MODE == DAC_DEMO_MODE
+	initDAC();
+	int DAC0Value = 0;
+	int DAC1Value = 4095;
+	signed char DAC0State = 1;
+	signed char DAC1State = -1;
+	while(1) {
+		setDAC(0,DAC0Value);
+		setDAC(1,DAC1Value);
+		if(DAC0Value >= 4095) {
+			DAC0State = -1;
+		}
+		if(DAC1Value >= 4095) {
+			DAC1State = -1;
+		}
+		if(DAC0Value <= 0) {
+			DAC0State = 1;
+		}
+		if(DAC1Value <= 0) {
+			DAC1State = 1;
+		}
+		DAC0Value+=DAC0State;
+		DAC1Value+=DAC1State;
+	}
+#endif
+
+#if MODE == DRIVE_ARM_MODE
+	initDAC();
+	while(1) {
+		driveLink('H',1000);
+		driveLink('L',-1000);
+		for (long i=0; i<2000000;i++) {
+			asm("nop");
+		}
+		driveLink('H',-1000);
+		driveLink('L',1000);
+		for (long i=0; i<2000000;i++) {
+			asm("nop");
+		}
+	}
+#endif
+
+#if MODE == PID_MODE
+	//initialize the DAC
+	initDAC();
+
+	initPID(0.01);
+
+	//We are using many ADC, so rather than pooling them all, we are using the autotrigger
+	initFreeRunADCAllChannels();
+
+	//set the setpoint
+	globals.upperLinkSetPoint = 512;
+
+	initPIDTimer(); //AS soon as the PID timer is running, the PID loop is in operation
+
+	while(1) {
+		printPIDValues();
+		globals.armHighLinkPot = globals.ADCValues[ARM_HIGH_LINK_POT];
+		setConst('H', globals.ADCValues[KP_POT]*PID_POT_MULTIPLE, globals.ADCValues[KI_POT]*PID_POT_MULTIPLE, globals.ADCValues[KD_POT]*PID_POT_MULTIPLE);
+		//p_sl(calcPID('H',globals.upperLinkSetPoint,globals.armHighLinkPot));
+		//p_fl(pidConst.Kp_H);
+		println("");
+	}
+#endif
+	return 0;
+}
+
+
+/*
+ * Prints the Orientation of potentiometer in ADC counts, pot output in millivolts, and arm orientation in degrees.
+ */
+void printArmData(unsigned short ADCValue) {
+	p_ul(globals.ADCValue);
+	print(",");
+	p_ul((globals.ADCValue*((float)5/1023))*1000);
+	print(",");
+	p_ul(globals.ADCValue*((float)POTANGLE/1023));
+	println("");
+}
+
+
+void printADCValues() {
+	p_ul(globals.ADCValues[ARM_HIGH_LINK_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[ARM_LOW_LINK_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[KP_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[KI_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[KD_POT]);
+	println("");
+}
+
+void printPIDValues() {
+	p_ul(globals.ADCValues[ARM_HIGH_LINK_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[ARM_LOW_LINK_POT]);
+	print("\t");
+	p_fl(globals.ADCValues[KP_POT]*PID_POT_MULTIPLE);
+	print("\t");
+	p_fl(globals.ADCValues[KI_POT]*PID_POT_MULTIPLE);
+	print("\t");
+	p_fl(globals.ADCValues[KD_POT]*PID_POT_MULTIPLE);
+	println("");
+}

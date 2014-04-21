@@ -1,0 +1,39 @@
+15:12:24 **** Incremental Build of configuration Release for project Lab4 ****
+make all 
+Building file: ../src/stateMachine.c
+Invoking: AVR Compiler
+avr-gcc -I"H:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -ffunction-sections -fdata-sections -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/stateMachine.d" -MT"src/stateMachine.d" -c -o "src/stateMachine.o" "../src/stateMachine.c"
+Finished building: ../src/stateMachine.c
+ 
+Building target: Lab4.elf
+Invoking: AVR C Linker
+avr-gcc -Wl,-Map,Lab4.map -L"H:\Workspace\RBELib\Release" -mmcu=atmega644p -o "Lab4.elf"  ./src/ADC.o ./src/DAC.o ./src/PID.o ./src/SPI.o ./src/USARTDebug.o ./src/armActuator.o ./src/autoADC.o ./src/currentSensor.o ./src/encoder.o ./src/globals.o ./src/kinematics.o ./src/main.o ./src/myatof.o ./src/stateMachine.o ./src/timer.o   -lm -lRBELib
+Finished building target: Lab4.elf
+ 
+Invoking: AVR Create Extended Listing
+avr-objdump -h -S Lab4.elf  >"Lab4.lss"
+Finished building: Lab4.lss
+ 
+Create Flash image (ihex format)
+avr-objcopy -R .eeprom -R .fuse -R .lock -R .signature -O ihex Lab4.elf  "Lab4.hex"
+Finished building: Lab4.hex
+ 
+Create eeprom image (ihex format)
+avr-objcopy -j .eeprom --no-change-warnings --change-section-lma .eeprom=0 -O ihex Lab4.elf  "Lab4.eep"
+Finished building: Lab4.eep
+ 
+Invoking: Print Size
+avr-size --format=avr --mcu=atmega644p Lab4.elf
+AVR Memory Usage
+----------------
+Device: atmega644p
+
+Program:   12330 bytes (18.8% Full)
+(.text + .data + .bootloader)
+
+Data:        856 bytes (20.9% Full)
+(.data + .bss + .noinit)
+
+
+Finished building: sizedummy
+ 

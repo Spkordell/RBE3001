@@ -1,0 +1,12 @@
+/*
+ * globals.c
+ *
+ *  Created on: Jan 22, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+void initGlobals() {
+	globals.timeStamp = 0;
+}

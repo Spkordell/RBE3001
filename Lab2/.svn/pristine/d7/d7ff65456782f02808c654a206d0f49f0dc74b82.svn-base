@@ -1,0 +1,44 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+ *
+ */
+
+#include "main.h"
+
+#define POTCHAN 0
+#define POTANGLE 300
+
+void printArmData(unsigned short ADCValue);
+
+
+//Create struct to store global variables (some ISR require global variables)
+Globals globals;
+
+int main() {
+	initGlobals();	//Initialize globals
+	DebugUSARTInit(DEFAULT_BAUD); //initialize USART
+
+	initFreeRunADC(POTCHAN); //InitializeADC for auto-conversion
+	//wait for start command from computer
+	println("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+	while(1) {
+		printArmData(globals.ADCValue);
+	}
+}
+
+
+/*
+ * Prints the Orientation of potentiometer in ADC counts, pot output in millivolts, and arm orientation in degrees.
+ */
+void printArmData(unsigned short ADCValue) {
+	p_ul(globals.ADCValue);
+	print(",");
+	p_ul((globals.ADCValue*((float)5/1023))*1000);
+	print(",");
+	p_ul(globals.ADCValue*((float)POTANGLE/1023));
+	println("");
+}

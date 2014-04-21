@@ -1,0 +1,30 @@
+13:21:05 **** Incremental Build of configuration Release for project Team6Lib ****
+make all 
+Building file: ../Lib/USARTDebug.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"Lib/USARTDebug.d" -MT"Lib/USARTDebug.d" -c -o "Lib/USARTDebug.o" "../Lib/USARTDebug.c"
+../Lib/USARTDebug.c:9:18: error: main.h: No such file or directory
+../Lib/USARTDebug.c: In function 'DebugUSARTInit':
+../Lib/USARTDebug.c:14: error: 'DEFAULT_BAUD' undeclared (first use in this function)
+../Lib/USARTDebug.c:14: error: (Each undeclared identifier is reported only once
+../Lib/USARTDebug.c:14: error: for each function it appears in.)
+../Lib/USARTDebug.c:23: error: 'UBRR1H' undeclared (first use in this function)
+../Lib/USARTDebug.c:24: error: 'UBRR1L' undeclared (first use in this function)
+../Lib/USARTDebug.c:26: error: 'UCSR1B' undeclared (first use in this function)
+../Lib/USARTDebug.c:26: error: 'RXEN0' undeclared (first use in this function)
+../Lib/USARTDebug.c:26: error: 'TXEN0' undeclared (first use in this function)
+../Lib/USARTDebug.c:28: error: 'UCSR1C' undeclared (first use in this function)
+../Lib/USARTDebug.c:28: error: 'USBS0' undeclared (first use in this function)
+../Lib/USARTDebug.c:28: error: 'UCSZ00' undeclared (first use in this function)
+../Lib/USARTDebug.c: In function 'putCharDebug':
+../Lib/USARTDebug.c:33: error: 'UCSR1A' undeclared (first use in this function)
+../Lib/USARTDebug.c:33: error: 'UDRE1' undeclared (first use in this function)
+../Lib/USARTDebug.c:35: error: 'UDR1' undeclared (first use in this function)
+../Lib/USARTDebug.c: In function 'USART_Receive':
+../Lib/USARTDebug.c:40: error: 'UCSR1A' undeclared (first use in this function)
+../Lib/USARTDebug.c:40: error: 'RXC1' undeclared (first use in this function)
+../Lib/USARTDebug.c:42: error: 'UDR1' undeclared (first use in this function)
+make: *** [Lib/USARTDebug.o] Error 1
+
+13:21:09 Build Finished (took 3s.880ms)
+

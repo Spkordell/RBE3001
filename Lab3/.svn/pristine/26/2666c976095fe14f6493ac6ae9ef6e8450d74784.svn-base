@@ -1,0 +1,9 @@
+/*
+ * accelerometer.c
+ *
+ *  Created on: Feb 12, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#include "main.h"

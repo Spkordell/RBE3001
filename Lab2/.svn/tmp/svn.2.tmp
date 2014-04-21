@@ -1,0 +1,19 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+ *
+ */
+
+#include "main.h"
+
+int main() {
+	GenericSPIInit();
+	int a = 0;
+	while(1){
+		setDAC(0, 0);
+		setDAC(0,1024);
+	}
+	return 0;
+}

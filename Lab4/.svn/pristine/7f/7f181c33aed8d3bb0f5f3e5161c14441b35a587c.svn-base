@@ -1,0 +1,221 @@
+/*
+ * main.c
+ *
+ *  Created on: Feb 19, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+Globals globals;
+
+int main() {
+	DebugUSARTInit(DEFAULT_BAUD);
+	initGlobals();
+	println("Chip Reset");
+
+#if MODE == FINAL_PROJECT_MODE
+	TASKSTATE currentState = INITIALIZE;
+	while(1) {
+		engageState(currentState);
+		currentState = updateState(currentState);
+		driveLinks();
+	}
+#endif
+
+#if MODE == IR_DATA_COLLECT_MODE
+	InitADC(BLOCK_SENSE_IR);
+	InitADC(TRIGGER_IR);
+	while(1) {
+		p_ul(GetADC(BLOCK_SENSE_IR));
+		println(",");
+		p_ul(GetADC(TRIGGER_IR));
+		println("");
+	}
+
+#endif
+
+#if MODE == SERVO_TEST_MODE
+	startConveyer();
+	 while(1);
+#endif
+#if MODE == PRINT_FK_MODE
+	initDAC(); //Initialize the DAC
+	initFreeRunMultiADCChannels((1 << ARM_HIGH_LINK_POT)|(1 << ARM_LOW_LINK_POT)); //Initialize the ADC
+	float x;
+	float y;
+	float theta1;
+	float theta2;
+	while(1) {
+		calcFPK(&x, &y, getLinkAngle('L'), getLinkAngle('H'));
+		p_fl(getLinkAngle('H'));
+		print("\t");
+		p_fl(getLinkAngle('L'));
+		print("\t");
+		p_fl(x);
+		print("\t");
+		p_fl(y);
+		println("");
+	}
+#endif
+	return 0;
+}
+
+//////////////////Helper methods below this point//////////////////////
+
+///State machine control Functions
+void engageState(TASKSTATE currentState) {
+	static float blockPosition;
+	static char distanceMeasureDelay;
+	static char distanceMeasured;
+	switch(currentState) {
+		case INITIALIZE:
+			initialize();
+			break;
+		case READY_ARM:
+			setLinkAngle('H',HIGH_LINK_DEFAULT_ANGLE);
+			setLinkAngle('L',LOW_LINK_DEFAULT_ANGLE);
+			break;
+		case WAIT_FOR_BLOCK:
+			//no actions need to be performed in this state, just wait for transition
+			break;
+		case PREP_FOR_PICKUP:
+			//Position the arm above where the block is going to be
+			setArmPosition(IR_POSITION_OFFSET+IRDistance(ADCVars.ADCValues[BLOCK_SENSE_IR]), DEFUALT_Y_POSITION);
+			break;
+		case WAIT_FOR_RISING_TRIGGER:
+			//no actions need to be performed in this state, just wait for transition
+			break;
+		case WAIT_FOR_FALLING_TRIGGER:
+			//save the position for future use
+			if (!distanceMeasured && distanceMeasureDelay >= DISTANCE_MEASURE_DELAY) {
+				blockPosition = IRDistance(ADCVars.ADCValues[TRIGGER_IR]);
+				distanceMeasured = 1;
+			}
+			distanceMeasureDelay++;
+			//TODO: use state delay timer to do the above
+			break;
+		case MOVE_TO_PICKUP:
+			setArmPosition(IR_POSITION_OFFSET+blockPosition, DEFUALT_Y_POSITION-HEIGHT_ABOVE_BLOCK);
+			//start a timer for delay before closing arm
+			setStateDelayTimer(0.1); //TODO: make define for value
+			break;
+		case GRAB_BLOCK:
+			closeGripper();
+			//allow time for gripper to close
+			setStateDelayTimer(0.1);
+			break;
+		default:
+			println("MISSING STATE ERROR 1- PROGRAM HALTED");
+			while(1);
+	}
+}
+
+TASKSTATE updateState(TASKSTATE currentState) {
+	switch(currentState) {
+		case INITIALIZE:
+			currentState = READY_ARM;
+			break;
+		case READY_ARM:
+			currentState = WAIT_FOR_BLOCK;
+			break;
+		case WAIT_FOR_BLOCK:
+			if (ADCVars.ADCValues[BLOCK_SENSE_IR] > MIN_BLOCK_DETECTION_THRESHOLD) {
+				//we see a block!
+				currentState = PREP_FOR_PICKUP;
+			}
+			break;
+		case PREP_FOR_PICKUP:
+			currentState = WAIT_FOR_RISING_TRIGGER;
+			break;
+		case WAIT_FOR_RISING_TRIGGER:
+			if (ADCVars.ADCValues[TRIGGER_IR] > MIN_BLOCK_DETECTION_THRESHOLD) {
+				//we see the leading edge of the block!
+				currentState = WAIT_FOR_FALLING_TRIGGER;
+			}
+			break;
+		case WAIT_FOR_FALLING_TRIGGER:
+			if (ADCVars.ADCValues[TRIGGER_IR] < MIN_BLOCK_DETECTION_THRESHOLD) {
+				//we see the leading edge of the block!
+				currentState = MOVE_TO_PICKUP;
+			}
+			break;
+		case MOVE_TO_PICKUP:
+			//wait for timer to trigger for next state transition
+			if (globals.timer2Triggered) {
+				currentState = GRAB_BLOCK;
+				stopStateDelayTimer();
+			}
+			break;
+		case GRAB_BLOCK:
+			if (globals.timer2Triggered) {
+				currentState = PICKUP_BLOCK;
+				stopStateDelayTimer();
+			}
+			break;
+			//todo: make state delay timer prevent transition to any state till timer triggered
+			//todo, slower prescale for state delay timer
+		default:
+			println("MISSING STATE ERROR 2 - PROGRAM HALTED");
+			while(1);
+	}
+	return currentState;
+}
+
+///State Specific functions
+void initialize() {
+	startConveyer(); //Start the conveyer belt
+	initDAC(); //Initialize the DAC
+	initPID(0.01); //Initialize PID variables
+	initFreeRunMultiADCChannels((1 << ARM_HIGH_LINK_POT)|(1 << ARM_LOW_LINK_POT)|(1 << BLOCK_SENSE_IR)|(1 << TRIGGER_IR)); //Initialize the ADC
+	setConst('H', 30.000, 5.000, 1.000); //Set high link PID Constants
+	setConst('L',45.000, 1.000, 0.200);	//set low link PID Constants
+	setLinkAngle('L',0); //set initial position
+	setLinkAngle('H',0); //set initial position
+	startPID(); //PID controller is now running
+	openGripper(); //Open the gripper
+}
+
+////Additional Helper Functions
+void startConveyer() {
+	SetServo(CONVEYER_SERVO,0);
+}
+void openGripper() {
+	 SetServo(GRIPPER_SERVO,0);
+}
+void closeGripper() {
+	 SetServo(GRIPPER_SERVO,180); //todo, constatns for numbers
+}
+/*
+ * Return distance in cm
+ */
+float IRDistance(uint16_t IRValue){
+	return 2.7892*IRValue*IRValue - 99.39*IRValue + 1218.8; //The coefficients in this function were determined empirically
+}
+
+void setStateDelayTimer(float period) {
+	globals.timer2MaxCount = ((float)F_CPU/((unsigned long)240*256))*((float)period); //for CTC = 240, prescale = 256
+	globals.timer2CurrentCount = 0;
+	globals.timer2Triggered = 0;
+	InitTimer(2,CTC,240);
+	//change prescaler to 256
+	TCCR2Bbits._CS22 = 1;
+	TCCR2Bbits._CS21 = 1;
+	TCCR2Bbits._CS20 = 0;
+}
+
+void stopStateDelayTimer() {
+	//turn off the state delay timer
+	TCCR2Bbits._CS22 = 0;
+	TCCR2Bbits._CS21 = 0;
+	TCCR2Bbits._CS20 = 0;
+	globals.timer2Triggered = 0;
+}
+
+ISR(TIMER2_COMPA_vect) {
+	if(globals.timer2CurrentCount >= globals.timer2MaxCount) {
+		globals.timer2CurrentCount = 0;
+		globals.timer2Triggered = 1;
+	}
+	globals.timer2CurrentCount++;
+}

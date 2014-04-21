@@ -1,0 +1,35 @@
+/*
+ * main.c
+ *
+ *  Created on: Feb 11, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+Globals globals;
+
+int main() {
+	DebugUSARTInit(DEFAULT_BAUD);
+	initGlobals();
+	println("Chip Reset");
+
+#if MODE == PRINT_ACCEL_VALUES
+	initAccelerometer();
+	while(1) {
+		if(accel.newDataAvailable) {
+			p_ul(accel.x);
+			print("\t");
+			p_ul(accel.y);
+			print("\t");
+			p_ul(accel.z);
+			println("");
+			accel.newDataAvailable = 0;
+		}
+	}
+#endif
+
+
+
+	return 0;
+}

@@ -1,0 +1,15 @@
+/*
+ * myatof.h
+ *
+ *  Created on: Mar 3, 2014
+ *      Author: cbwallepstein
+ */
+
+#ifndef MYATOF_H_
+#define MYATOF_H_
+
+#include "main.h"
+
+double myatof(s);
+
+#endif /* MYATOF_H_ */

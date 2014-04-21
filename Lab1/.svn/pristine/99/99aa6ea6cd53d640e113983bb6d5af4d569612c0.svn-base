@@ -1,0 +1,23 @@
+/*
+ * globals.c
+ *
+ *  Created on: Jan 22, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+void initGlobals() {
+	globals.timeStamp = 0;
+	globals.Second = 0;
+	globals.Minute = 0;
+	globals.Hour = 0;
+	globals.PWMPort = 'A';
+	globals.PWMPin = 0;
+	globals.PWMMaxTime = 0;
+	globals.PWMCurrentCount = 0;
+	globals.PWMHighTime = 0;
+	globals.PWMCompare = 0;
+	globals.PWMDuty = 0;
+	globals.PWMFrequency = 0;
+}

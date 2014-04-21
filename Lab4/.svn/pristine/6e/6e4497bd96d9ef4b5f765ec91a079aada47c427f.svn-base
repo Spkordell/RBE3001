@@ -1,0 +1,31 @@
+/*
+ * kinematics.c
+ *
+ *  Created on: Feb 5, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#include "main.h"
+
+/*
+ * This function computes the forward position kinematic of the arm. Given the high and low link angles, the x and y variables will be filled with the arm's position
+ */
+void calcFPK(float* x, float* y, float lowLinkAngle, float highLinkAngle) {
+	*x = LOW_LINK_LENGTH*cos(lowLinkAngle*RADIANS_PER_DEGREE)+HIGH_LINK_LENGTH*cos((lowLinkAngle+highLinkAngle)*RADIANS_PER_DEGREE);
+	*y = LOW_LINK_LENGTH*sin(lowLinkAngle*RADIANS_PER_DEGREE)+HIGH_LINK_LENGTH*sin((lowLinkAngle+highLinkAngle)*RADIANS_PER_DEGREE);
+}
+
+/*
+ * This function computes the inverse position kinematics of the arm. Given a Cartesian position, it will output the angles needed to achieve that position.
+ */
+void calcIPK(float* lowLinkAngle, float* highLinkAngle, float x, float y) {
+	float x2 = x*x;
+	float y2 = y*y;
+
+	*highLinkAngle = -acos(((x2+y2)-((long)LOW_LINK_LENGTH_2+HIGH_LINK_LENGTH_2))/((long)2*LOW_LINK_LENGTH*HIGH_LINK_LENGTH));
+	*lowLinkAngle =  atan(y/x) + acos((x2+y2+LOW_LINK_LENGTH_2-HIGH_LINK_LENGTH_2)/(2*LOW_LINK_LENGTH*sqrt(x2+y2)));// the plus after atan could also be minus for elbow-down solution
+
+	*highLinkAngle*=DEGREES_PER_RADIAN;
+	*lowLinkAngle*=DEGREES_PER_RADIAN;
+}

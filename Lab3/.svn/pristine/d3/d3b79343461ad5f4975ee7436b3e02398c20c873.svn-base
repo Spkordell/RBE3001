@@ -1,0 +1,36 @@
+/*
+ * accelerometer.c
+ *
+ *  Created on: Feb 12, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#include "main.h"
+
+Accel accel;
+
+void initAccelerometer() {
+	accel.dataAvailable = 0;
+	InitADC(ACCEL_X);
+	InitADC(ACCEL_Y);
+	InitADC(ACCEL_Z);
+	accel.timerMaxCount = (F_CPU/255)*((float)1/500);
+	accel.timerCurrentCount = 0;
+	InitTimer(0,NORMAL,0);
+	//TODO: change prescaler
+	//TODO: make structs for global variables+
+}
+
+
+ISR(TIMER0_COMPA_vect) {
+	if(accel.timerCurrentCount >= accel.timerMaxCount) {
+		accel.timerCurrentCount = 0;
+		accel.x = GetADC(ACCEL_X);
+		accel.y = GetADC(ACCEL_Y);
+		accel.z = GetADC(ACCEL_Z);
+		accel.dataAvailable = 1;
+	} else {
+		accel.timerCurrentCount++;
+	}
+}

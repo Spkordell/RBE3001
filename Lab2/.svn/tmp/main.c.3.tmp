@@ -1,0 +1,177 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+ *
+ */
+
+#include "main.h"
+
+Globals globals;
+
+int main() {
+	initGlobals();	//Initialize globals
+	DebugUSARTInit(DEFAULT_BAUD); //initialize USART
+	println("Chip Reset");
+
+#if MODE == ARM_DATA_MODE
+	initFreeRunADCAllChannels(); //Initialize Auto ADC
+<<<<<<< .mine
+	//todo, don't use all variables
+
+=======
+>>>>>>> .r59
+	//wait for start command from computer
+	println("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+	while(1) {
+		printArmData();
+	}
+#endif
+
+#if MODE == DAC_DEMO_MODE
+	initDAC();
+	int DAC0Value = 0;
+	int DAC1Value = 4095;
+	signed char DAC0State = 1;
+	signed char DAC1State = -1;
+	while(1) {
+		setDAC(0,DAC0Value);
+		setDAC(1,DAC1Value);
+		if(DAC0Value >= 4095) {
+			DAC0State = -1;
+		}
+		if(DAC1Value >= 4095) {
+			DAC1State = -1;
+		}
+		if(DAC0Value <= 0) {
+			DAC0State = 1;
+		}
+		if(DAC1Value <= 0) {
+			DAC1State = 1;
+		}
+		DAC0Value+=DAC0State;
+		DAC1Value+=DAC1State;
+	}
+#endif
+
+#if MODE == DRIVE_ARM_MODE
+	initDAC();
+	while(1) {
+		driveLink('H',1000);
+		driveLink('L',-1000);
+		for (long i=0; i<2000000;i++) {
+		}
+		driveLink('H',-1000);
+		driveLink('L',1000);
+		for (long i=0; i<2000000;i++) {
+		}
+	}
+#endif
+
+#if MODE == CURRENT_SENSE_MODE
+	initDAC(); 	//initialize the DAC
+	initFreeRunADCAllChannels(); //Initialize Auto ADC
+	configureButtonInterrupts(); //Initialize Button Interrupts (for selecting setpoint since we don't have another pot)
+	while(1) {
+		//globals.armHighLinkPot = globals.ADCValues[ARM_HIGH_LINK_POT]; //Need to update arm state
+		//Print current sensor data
+		p_ul(globals.ADCValues[CURRENT_SENSE_0_ADC]);
+		print(",");
+		p_fl(calculateCurrent(globals.ADCValues[CURRENT_SENSE_0_ADC]));
+		print("\t");
+		p_ul(globals.ADCValues[CURRENT_SENSE_1_ADC]);
+		print(",");
+		p_fl(calculateCurrent(globals.ADCValues[CURRENT_SENSE_1_ADC]));
+		println("");
+
+	}
+
+#endif
+
+#if MODE == PID_MODE
+	initDAC(); 	//initialize the DAC
+	initPID(0.01); //Initialize the PID variables
+	configureButtonInterrupts(); //Initialize Button Interrupts (for selecting setpoint since we don't have another pot)
+	initFreeRunADCAllChannels(); //Initialize Auto ADC
+	globals.upperLinkSetPoint = 512; //set the initial setpoint
+	startPID(); //Starts the timer and begins the PID operations
+	while(1) {
+		printPIDValues();
+		globals.armHighLinkPot = globals.ADCValues[ARM_HIGH_LINK_POT]; //Need to update arm state
+		setConst('H', globals.ADCValues[KP_POT]*PID_POT_KD_MULTIPLE, globals.ADCValues[KI_POT]*PID_POT_KI_MULTIPLE, globals.ADCValues[KD_POT]*PID_POT_KD_MULTIPLE); //Update the PID constants
+	}
+#endif
+	return 0;
+}
+
+ISR(PCINT3_vect) {
+	if(PINDbits._P7 == 0) {
+		globals.upperLinkSetPoint = 263;
+
+	}
+	if(PINDbits._P6 == 0) {
+		globals.upperLinkSetPoint = 460;
+		#if MODE == CURRENT_SENSE_MODE
+			driveLink('H',4095);
+			driveLink('L',4095);
+		#endif
+	}
+	if(PINDbits._P5 == 0) {
+		globals.upperLinkSetPoint = 770;
+		#if MODE == CURRENT_SENSE_MODE
+			driveLink('H',-4095);
+			driveLink('L',-4095);
+
+		#endif
+	}
+	if(PINDbits._P4 == 0) {
+		globals.upperLinkSetPoint = 1010;
+		#if MODE == CURRENT_SENSE_MODE
+			driveLink('H',0);
+			driveLink('L',-0);
+
+		#endif
+	}
+}
+
+/*
+ * Prints the Orientation of potentiometer in ADC counts, pot output in millivolts, and arm orientation in degrees.
+ */
+void printArmData() {
+	float ADCVal = globals.ADCValues[ARM_HIGH_LINK_POT];
+	p_ul(ADCVal);
+	print(",");
+	p_ul(ADCVal*((float)5/1023)*1000);
+	print(",");
+	p_sl((ADCVal-POT0_ADC_CENTER)*POT_DEG_PER_BYTE);
+	println("");
+}
+
+
+void printADCValues() {
+	p_ul(globals.ADCValues[ARM_HIGH_LINK_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[ARM_LOW_LINK_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[KP_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[KI_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[KD_POT]);
+	println("");
+}
+
+void printPIDValues() {
+	p_ul(globals.upperLinkSetPoint);
+	print("\t");
+	p_ul(globals.ADCValues[ARM_HIGH_LINK_POT]);
+	print("\t");
+	p_fl(globals.ADCValues[KP_POT]*PID_POT_KP_MULTIPLE);
+	print("\t");
+	p_fl(globals.ADCValues[KI_POT]*PID_POT_KI_MULTIPLE);
+	print("\t");
+	p_fl(globals.ADCValues[KD_POT]*PID_POT_KD_MULTIPLE);
+	println("");
+}

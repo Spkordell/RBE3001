@@ -1,0 +1,88 @@
+/*
+ * PWM.c
+ *
+ *  Created on: Jan 24, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+/*
+ * Lower compare values result in higher accuracy, but result in more CPU interrupts. The best values are divisible by the input frequency.
+ */
+void initPWM(uint8_t port, uint8_t pin, float frequency, float duty, uint16_t compare) {
+	globals.PWMPort = port;
+	globals.PWMPin = pin;
+	// Set output direction on pin
+	switch(port) {
+	case 'A':
+		DDRA |= (1 << pin);
+		break;
+	case 'B':
+		DDRB |= (1 << pin);
+		break;
+	case 'C':
+		DDRC |= (1 << pin);
+		break;
+	case 'D':
+		DDRD |= (1 << pin);
+		break;
+	}
+	globals.PWMMaxTime = ((F_CPU/compare))*(1/(frequency));
+	globals.PWMHighTime = (globals.PWMMaxTime*duty);
+	globals.PWMCurrentCount = 0;
+	InitTimer(1,CTC,compare);
+}
+
+void setPWMDuty(float duty) {
+	globals.PWMHighTime = (globals.PWMMaxTime*duty);
+}
+
+void pinHigh() {
+	//set Pin High
+	switch(globals.PWMPort) {
+	case 'A':
+		PORTA |= (1 << globals.PWMPin);
+		break;
+	case 'B':
+		PORTB |= (1 << globals.PWMPin);
+		break;
+	case 'C':
+		PORTC |= (1 << globals.PWMPin);
+		break;
+	case 'D':
+		PORTD |= (1 << globals.PWMPin);
+		break;
+	}
+}
+
+void pinLow() {
+	//Set pin low
+	switch(globals.PWMPort) {
+	case 'A':
+		PORTA &= ~(1 << globals.PWMPin);
+		break;
+	case 'B':
+		PORTB &= ~(1 << globals.PWMPin);
+		break;
+	case 'C':
+		PORTC &= ~(1 << globals.PWMPin);
+		break;
+	case 'D':
+		PORTD &= ~(1 << globals.PWMPin);
+		break;
+	}
+}
+
+ISR(TIMER1_COMPA_vect) {
+	if(globals.PWMCurrentCount <= globals.PWMHighTime) {
+		pinHigh();
+	} else {
+		pinLow();
+		if(globals.PWMCurrentCount >= globals.PWMMaxTime) {
+			globals.PWMCurrentCount = 0;
+		}
+	}
+	globals.PWMCurrentCount++;
+}
+

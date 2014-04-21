@@ -1,0 +1,81 @@
+/**
+ * @file PID.h
+ *
+ * @brief The header file for PID constants and calculations.
+ * @details Sets the PID constants and calculate the PID value.
+ * @author Eric Willcox
+ * @date August 17 2013
+ */
+
+#ifndef PID_H_
+#define PID_H_
+
+/**
+ * @brief PID constants.
+ * @details Obtain value using:
+ * @code pidConst.Kp_H; @endcode for the value desired.
+ */
+typedef struct {
+  /**
+   * @brief Upper link Kp.
+   */
+  float Kp_H;
+  /**
+   * @brief Upper link Ki.
+   */
+  float Ki_H;
+  /**
+   * @brief Upper link Kd.
+   */
+  float Kd_H;
+  /**
+   * @brief Lower link Kp.
+   */
+  float Kp_L;
+  /**
+   * @brief Lower link Ki.
+   */
+  float Ki_L;
+  /**
+   * @brief Lower link Kd.
+   */
+  float Kd_L;
+
+  /*
+   * @brief Upper link last error.
+   */
+  float lastError_H;
+
+  /*
+   * @brief Lower link last error.
+   */
+  float lastError_L;
+
+  /*
+   * @brief Upper link error sum.
+   */
+  float sumError_H;
+
+  /*
+    * @brief Lower link error sum.
+    */
+  float sumError_L;
+
+  /*
+   * @brief Minimum time step
+   */
+  float dt;
+
+} PidConst;
+
+/**
+* @brief Declaration for use in other files.
+*/
+extern PidConst pidConst;
+
+void initPID(float dt);
+void setConst(unsigned char link, float Kp, float Ki, float Kd);
+int calcPID(unsigned char link, int setPoint, int actPos, float Kp, float Ki, float Kd);
+
+
+#endif /* PID_H_ */

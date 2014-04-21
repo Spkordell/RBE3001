@@ -1,0 +1,291 @@
+/*
+ * stateMachine.c
+ *
+ *  Created on: Mar 2, 2014
+ *      Author: spkordell
+ */
+
+#include "main.h"
+
+/*
+ * State machine control Functions: Perform some action dependent upon the current state of the system.
+ */
+void engageState(TASKSTATE currentState) {
+	//variables needed between states
+	static TASKSTATE lastState; //this allows us to check for a recent state transition
+	static BLOCK_WEIGHT blockWeight;
+	static float blockXPosition;
+	static float currentSum;
+	char thresholdOffset = 0;
+	//check the state and perform the proper action (see header file for more details on action to be performed by state)
+	switch(currentState) {
+		case INITIALIZE:
+			initialize();
+			if (lastState != currentState) {
+				setStateDelayTimer(.5);
+			}
+			break;
+		case READY_ARM:
+			setLinkAngle('H',HIGH_LINK_DEFAULT_ANGLE);
+			setLinkAngle('L',LOW_LINK_DEFAULT_ANGLE);
+			if (lastState != currentState) {
+				setStateDelayTimer(.5);
+			}
+			break;
+		case WAIT_FOR_BLOCK:
+			//no actions need to be performed in this state, just wait for the state transition
+			break;
+		case WAIT_FOR_BLOCK_NOISE_CHECK:
+			if (lastState != currentState) {
+				setStateDelayTimer(BLOCK_NOISE_CHECK_TIME); //small delay which eliminates sensor noise
+			}
+			break;
+		case PREP_FOR_PICKUP:
+			//Position the arm above where the block is going to be
+			blockXPosition = (IR_POSITION_OFFSET+IRDistance(ADCVars.ADCValues[BLOCK_SENSE_IR]))*10;
+			setArmPosition(blockXPosition, DEFUALT_Y_POSITION);
+			break;
+		case WAIT_FOR_RISING_TRIGGER:
+			//no actions need to be performed in this state, just wait for transition
+			break;
+		case WAIT_FOR_RISING_TRIGGER_NOISE_CHECK:
+			if (lastState != currentState) {
+				setStateDelayTimer(BLOCK_NOISE_CHECK_TIME); //small delay which eliminates sensor noise
+			}
+			break;
+		case WAIT_FOR_FALLING_TRIGGER:
+			if (lastState != currentState) {
+				setStateDelayTimer(BLOCK_TRAVEL_TIME);
+			}
+			break;
+		case MOVE_TO_PICKUP:
+			setArmPosition(blockXPosition, DEFUALT_Y_POSITION-(HEIGHT_ABOVE_BLOCK*10));
+			//allow time for block to reach arm
+			if (lastState != currentState) {
+				setStateDelayTimer(ARM_DROP_TIME);
+			}
+			break;
+		case GRAB_BLOCK:
+			closeGripper();
+			//allow time for gripper to close
+			if (lastState != currentState) {
+				setStateDelayTimer(GRIPPER_CLOSE_TIME);
+			}
+			break;
+		case PICKUP_BLOCK:
+			setArmPosition(ARM_LIFT_X_POSITION, ARM_LIFT_Y_POSITION);
+			currentSum += calculateCurrent(ADCVars.ADCValues[CURRENT_SENSE_1_ADC]); //sum the current over time
+			if (lastState != currentState) {
+				setStateDelayTimer(ARM_LIFT_TIME);
+			}
+			break;
+		case DETERMINE_WEIGHT:
+			if (lastState != currentState) {
+				setStateDelayTimer(CURRENT_SUM_TIME);
+			}
+			break;
+		case MOVE_TO_SORT:
+			if(blockXPosition > 400){
+				thresholdOffset = -20;
+			} else{
+				thresholdOffset = 20;
+			}
+			if (currentSum < -130+thresholdOffset){//> HEAVY_THRESHOLD) {
+				blockWeight = HEAVY;
+			} else if (currentSum > -130+thresholdOffset){//< LIGHT_THRESHOLD) {
+				blockWeight = LIGHT;
+			}
+			p_fl(currentSum);
+			print("\t");
+			switch (blockWeight) {
+				case HEAVY:
+					print("HEAVY");
+					break;
+				case LIGHT:
+					print("LIGHT");
+					break;
+			}
+			println("");
+			float heavyXPosition = (IR_POSITION_OFFSET+IRDistance(HEAVY_WEIGHT_IR_POSITION))*10;
+			float lightXPosition = (IR_POSITION_OFFSET+IRDistance(LIGHT_WEIGHT_IR_POSITION))*10;
+			if (blockWeight == HEAVY) {
+				setArmPosition(heavyXPosition,DEFUALT_Y_POSITION-(DROPOFF_BLOCK_HEIGHT*9));
+			}
+			else {
+				setArmPosition(lightXPosition,DEFUALT_Y_POSITION-(DROPOFF_BLOCK_HEIGHT*8));
+			}
+			if (lastState != currentState) {
+				setStateDelayTimer(ARM_SET_TIME);
+			}
+			break;
+		case DROP_TO_SORT:
+			currentSum=0;
+			openGripper();
+			if (lastState != currentState) {
+				setStateDelayTimer(GRIPPER_OPEN_TIME);
+			}
+			break;
+		default:
+			println("MISSING STATE ERROR 1 - PROGRAM HALTED");
+			while(1);
+	}
+	lastState = currentState;
+}
+
+/*
+ * This function handles the transitions between the states. Given a state, it will determine what the next state should be based upon the state transition model.
+ */
+TASKSTATE updateState(TASKSTATE currentState) {
+	if(!globals.timer2Running || globals.timer2Triggered) {
+		switch(currentState) {
+			case INITIALIZE:
+				currentState = READY_ARM;
+				break;
+			case READY_ARM:
+				currentState = WAIT_FOR_BLOCK;
+				break;
+			case WAIT_FOR_BLOCK:
+				if (ADCVars.ADCValues[BLOCK_SENSE_IR] > MIN_BLOCK_DETECTION_THRESHOLD) {
+					currentState = WAIT_FOR_BLOCK_NOISE_CHECK;
+				}
+				break;
+			case WAIT_FOR_BLOCK_NOISE_CHECK:
+				if (ADCVars.ADCValues[BLOCK_SENSE_IR] > MIN_BLOCK_DETECTION_THRESHOLD) {
+					currentState = PREP_FOR_PICKUP;
+				} else {
+					currentState = WAIT_FOR_BLOCK;
+				}
+				break;
+			case PREP_FOR_PICKUP:
+				currentState = WAIT_FOR_RISING_TRIGGER;
+				break;
+			case WAIT_FOR_RISING_TRIGGER:
+				if (ADCVars.ADCValues[TRIGGER_IR] > MIN_BLOCK_TRIGGER_THRESHOLD) {
+					//we see the leading edge of the block!
+					currentState = WAIT_FOR_RISING_TRIGGER_NOISE_CHECK;
+				}
+				break;
+			case WAIT_FOR_RISING_TRIGGER_NOISE_CHECK:
+				if (ADCVars.ADCValues[TRIGGER_IR] > MIN_BLOCK_TRIGGER_THRESHOLD) {
+					//we see the leading edge of the block again, no noise!
+					currentState = WAIT_FOR_FALLING_TRIGGER;
+				} else {
+					currentState = WAIT_FOR_RISING_TRIGGER;
+				}
+				break;
+			case WAIT_FOR_FALLING_TRIGGER:
+				if (ADCVars.ADCValues[TRIGGER_IR] < MIN_BLOCK_TRIGGER_THRESHOLD) {
+					//we see the falling edge of the block!
+					currentState = MOVE_TO_PICKUP;
+				}
+				break;
+			case MOVE_TO_PICKUP:
+				currentState = GRAB_BLOCK;
+				break;
+			case GRAB_BLOCK:
+				currentState = PICKUP_BLOCK;
+				break;
+			case PICKUP_BLOCK:
+				currentState = DETERMINE_WEIGHT;
+				break;
+			case DETERMINE_WEIGHT:
+				currentState = MOVE_TO_SORT;
+				break;
+			case MOVE_TO_SORT:
+				currentState = DROP_TO_SORT;
+				break;
+			case DROP_TO_SORT:
+				currentState = READY_ARM;
+				break;
+			default:
+				println("MISSING STATE ERROR 2 - PROGRAM HALTED");
+				while(1);
+		}
+		stopStateDelayTimer();
+	}
+	return currentState;
+}
+
+/*
+ * This funtion will print the current state to the terminal, but only when a state transition has occurred
+ */
+void printState(TASKSTATE currentState) {
+	static TASKSTATE lastState;
+	if (lastState!=currentState) {
+		switch(currentState) {
+			case INITIALIZE:
+				println("INITIALIZE");
+				break;
+			case READY_ARM:
+				println("READY_ARM");
+				break;
+			case WAIT_FOR_BLOCK:
+				println("WAIT_FOR_BLOCK");
+				break;
+			case WAIT_FOR_BLOCK_NOISE_CHECK:
+				println("WAIT_FOR_BLOCK_NOISE_CHECK");
+				break;
+			case PREP_FOR_PICKUP:
+				println("PREP_FOR_PICKUP");
+				break;
+			case WAIT_FOR_RISING_TRIGGER:
+				println("WAIT_FOR_RISING_TRIGGER");
+				break;
+			case WAIT_FOR_FALLING_TRIGGER:
+				println("WAIT_FOR_FALLING_TRIGGER");
+				break;
+			case MOVE_TO_PICKUP:
+				println("MOVE_TO_PICKUP");
+				break;
+			case GRAB_BLOCK:
+				println("GRAB_BLOCK");
+				break;
+			case PICKUP_BLOCK:
+				println("PICKUP_BLOCK");
+				break;
+			case DETERMINE_WEIGHT:
+				println("DETERMINE_WEIGHT");
+				break;
+			case MOVE_TO_SORT:
+				println("MOVE_TO_SORT");
+				break;
+			case DROP_TO_SORT:
+				println("DROP_TO_SORT");
+				break;
+			default:
+				println("Unknown state");
+				break;
+		}
+	}
+	lastState = currentState;
+}
+
+
+void setStateDelayTimer(float period) {
+	globals.timer2MaxCount = ((float)F_CPU/((unsigned long)240*256))*((float)period); //for CTC = 240, prescale = 256
+	globals.timer2CurrentCount = 0;
+	globals.timer2Triggered = 0;
+	InitTimer(2,CTC,240);
+	//change prescaler to 256
+	TCCR2Bbits._CS22 = 1;
+	TCCR2Bbits._CS21 = 1;
+	TCCR2Bbits._CS20 = 0;
+	globals.timer2Running = 1;
+}
+
+void stopStateDelayTimer() {
+	//turn off the state delay timer
+	TCCR2Bbits._CS22 = 0;
+	TCCR2Bbits._CS21 = 0;
+	TCCR2Bbits._CS20 = 0;
+	globals.timer2Triggered = 0;
+	globals.timer2Running = 0;
+}
+
+ISR(TIMER2_COMPA_vect) {
+	if(globals.timer2CurrentCount >= globals.timer2MaxCount) {
+		globals.timer2CurrentCount = 0;
+		globals.timer2Triggered = 1;
+	}
+	globals.timer2CurrentCount++;
+}

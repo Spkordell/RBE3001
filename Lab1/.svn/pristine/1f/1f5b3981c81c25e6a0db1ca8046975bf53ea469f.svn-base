@@ -1,0 +1,37 @@
+/*
+ * timeStamp.c
+ *
+ *  Created on: Jan 25, 2014
+ *      Author: Cody Wall
+ */
+
+
+
+#include "main.h"
+
+void initTimeStamp(void){
+	InitTimer(1,NORMAL,0);//32767);	//Timer1, at comparitor, at a _____ sec resolution
+//	InitTimer(0,CTC,1024);
+}
+
+void timeStamp(void){
+	if(globals.Second >= 60){
+		globals.Minute++;
+		globals.Second = 0;
+	}
+
+	else if(globals.Minute >= 60){
+		globals.Hour++;
+		globals.Minute = 0;
+	}
+}
+
+
+ISR(TIMER1_OVF_vect){
+	if (globals.timeStamp >= (F_CPU/65535)) {
+		globals.timeStamp = 0;
+		globals.Second++;
+	}
+	globals.timeStamp++;
+	timeStamp();
+}

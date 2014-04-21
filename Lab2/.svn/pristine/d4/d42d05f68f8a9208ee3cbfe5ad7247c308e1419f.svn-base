@@ -1,0 +1,14 @@
+/*
+ * kinematics.c
+ *
+ *  Created on: Feb 5, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#include "main.h"
+
+void calcFPK(float* x, float* y, float lowLinkAngle, float highLinkAngle) {
+	*x = LOW_LINK_LENGTH*cos(lowLinkAngle*RADIANS_PER_DEGREE)+HIGH_LINK_LENGTH*cos((lowLinkAngle+highLinkAngle)*RADIANS_PER_DEGREE);
+	*y = LOW_LINK_LENGTH*sin(lowLinkAngle*RADIANS_PER_DEGREE)+HIGH_LINK_LENGTH*sin((lowLinkAngle+highLinkAngle)*RADIANS_PER_DEGREE);
+}

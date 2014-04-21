@@ -1,0 +1,39 @@
+/*
+ * encoder.c
+ *
+ *  Created on: Feb 12, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+void initEncoder(char which) {
+	//Initialize SPI
+	GenericSPIInit();
+	//Set SS to output
+	DDRC |=  which == 'H' ? (1 << HIGH_ENCODER_SS) : (1 << LOW_ENCODER_SS); //set bits
+	//set SS high
+	PORTC |= which == 'H' ? (1 << HIGH_ENCODER_SS) : (1 << LOW_ENCODER_SS);
+
+	//load_rst_reg(CLR_CNTR);
+	//todo finish me
+}
+
+void initEncoders() {
+	initEncoder('H');
+	initEncoder('L');
+}
+
+/*
+ * Outputs the number of encoder pulses received since the last sample time. If __chan = 'L', the function returns the number of counts for motor channel 0, if __chan = 'H;, the function returns the number of counts for motor channel 1. The function must return a value of -1 in an invalid channel is requested.
+ *
+ */
+int16_t EncoderCounts(int chan) {
+	if (chan == 'H') {
+		//TODO: fill this in
+	} else if (chan == 'L') {
+		//TODO: fill this in
+	} else {
+		return -1;
+	}
+}

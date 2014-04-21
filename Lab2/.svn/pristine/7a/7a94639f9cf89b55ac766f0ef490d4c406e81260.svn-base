@@ -1,0 +1,81 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+ *
+ */
+
+#include "main.h"
+
+#define POTCHAN 0
+#define POTANGLE 300
+
+void printArmData(unsigned short ADCValue);
+
+
+#define CODY_NAME_YOUR_MODE 4
+#define DAC_DEMO 5
+
+#define MODE DAC_DEMO
+
+//Create struct to store global variables (some ISR require global variables)
+Globals globals;
+
+int main() {
+	initGlobals();	//Initialize globals
+	DebugUSARTInit(DEFAULT_BAUD); //initialize USART
+
+#if MODE == CODY_NAME_YOUR_MODE
+	initFreeRunADC(POTCHAN); //InitializeADC for auto-conversion
+	//wait for start command from computer
+	println("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+	while(1) {
+		printArmData(globals.ADCValue);
+	}
+#endif
+
+#if MODE == DAC_DEMO
+	initDAC();
+	int DAC0Value = 0;
+	int DAC1Value = 4095;
+	signed char DAC0State = 1;
+	signed char DAC1State = -1;
+	while(1) {
+		setDAC(0,DAC0Value);
+		setDAC(1,DAC1Value);
+		if(DAC0Value >= 4095) {
+			DAC0State = -1;
+		}
+		if(DAC1Value >= 4095) {
+			DAC1State = -1;
+		}
+		if(DAC0Value <= 0) {
+			DAC0State = 1;
+		}
+		if(DAC1Value <= 0) {
+			DAC1State = 1;
+		}
+		DAC0Value+=DAC0State;
+		DAC1Value+=DAC1State;
+	}
+#endif
+
+
+	return 0;
+
+}
+
+
+/*
+ * Prints the Orientation of potentiometer in ADC counts, pot output in millivolts, and arm orientation in degrees.
+ */
+void printArmData(unsigned short ADCValue) {
+	p_ul(globals.ADCValue);
+	print(",");
+	p_ul((globals.ADCValue*((float)5/1023))*1000);
+	print(",");
+	p_ul(globals.ADCValue*((float)POTANGLE/1023));
+	println("");
+}

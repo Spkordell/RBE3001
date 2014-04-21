@@ -1,0 +1,66 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+//function prototypes
+void printData(unsigned short ADCValue);/*void configureButtons();
+uint16_t pollFrequencySelectButtons();*/
+
+#define POTCHAN 4 //define channel the potentiometer is connected to
+#define PWMMODE
+Globals globals; //Create struct to store global variables
+
+int main() {
+	initGlobals();	//Initialize globals
+	configureButtons(); //Configure the buttons
+	DebugUSARTInit(DEFAULT_BAUD); //initialize USART
+	initAutoADC(POTCHAN); //InitializeADC for auto-conversion
+//	initTimeStamp();
+
+#ifdef PWMMODE
+	initPWM('B',3,100,.50,576);
+	while(1) {
+		setPWMDuty((float)globals.ADCValue/1023);
+	}
+#else
+	//wait for start command from computer
+	print("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+	while(1) {
+		printData(globals.ADCValue);
+	}
+#endif
+	return 0;
+}
+
+/*
+
+
+*/
+
+/*
+ * Transmits formated pot values over serial
+ */
+void printData(unsigned short ADCValue) {
+	//TODO: time stamps is wrong, should be hours/minutes/seconds.00 since program start.
+	p_ul(globals.timeStamp++);
+/*
+	p_u1(globals.Hour);
+	print(".");
+	p_u1(globals.Minute);
+	print(".");
+	p_u1(globals.Second);
+*/
+	print(",");
+	p_ul(globals.ADCValue);
+	print(",");
+	print("output in milivolts here");
+	print(",");
+	print("angle here");
+	println("");
+}

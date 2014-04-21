@@ -1,0 +1,29 @@
+/*
+ * pot.c
+ *
+ *  Created on: Jan 23, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+/**
+ * @brief Find the ADC value of the given potentiometer.
+ * @param  pot The pot to get the value of.
+ * @return adcVal Value of  potentiometer.
+ *
+ * @todo Create a function to get the ADC value of the potentiometer.
+ */
+int potADC(unsigned char pot) {
+	return
+}
+
+/**
+ * @brief Find the voltage value of the given potentiometer.
+ * @param  pot The pot to get the value of.
+ * @return volts Voltage of  potentiometer.
+ *
+ * @todo Create a function to get the voltage of the potentiometer.
+ */
+int potVolts(unsigned char pot) {
+
+}

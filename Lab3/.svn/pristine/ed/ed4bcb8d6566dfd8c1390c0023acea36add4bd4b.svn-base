@@ -1,0 +1,14 @@
+/*
+ * main.h
+ *
+ *  Created on: Feb 11, 2014
+ *      Author: Steven Kordell
+ */
+
+#ifndef MAIN_H_
+#define MAIN_H_
+
+#include "RBELib/RBELib.h"
+#include <avr/io.h>
+
+#endif /* MAIN_H_ */

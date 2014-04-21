@@ -1,0 +1,234 @@
+/*
+ * stateMachine.c
+ *
+ *  Created on: Mar 2, 2014
+ *      Author: spkordell
+ */
+
+#include "main.h"
+
+///State machine control Functions
+void engageState(TASKSTATE currentState) {
+	static TASKSTATE lastState;
+	static BLOCK_WEIGHT blockWeight;
+	static float blockPosition;
+	switch(currentState) {
+		case INITIALIZE:
+			initialize();
+			if (lastState != currentState) {
+				setStateDelayTimer(.5);
+			}
+			break;
+		case READY_ARM:
+			setLinkAngle('H',HIGH_LINK_DEFAULT_ANGLE);
+			setLinkAngle('L',LOW_LINK_DEFAULT_ANGLE);
+			if (lastState != currentState) {
+				setStateDelayTimer(.5);
+			}
+			break;
+		case WAIT_FOR_BLOCK1:
+			//no actions need to be performed in this state, just wait for transition
+
+			break;
+		case WAIT_FOR_BLOCK2:
+			if (lastState != currentState) {
+				setStateDelayTimer(0.05); //small delay which eliminates sensor noise //TODO:, make number constant
+			}
+			break;
+		case PREP_FOR_PICKUP:
+			//Position the arm above where the block is going to be
+			setArmPosition((IR_POSITION_OFFSET+IRDistance(ADCVars.ADCValues[BLOCK_SENSE_IR]))*10, DEFUALT_Y_POSITION);
+			blockPosition = (IR_POSITION_OFFSET+IRDistance(ADCVars.ADCValues[BLOCK_SENSE_IR]))*10;
+			break;
+		case WAIT_FOR_RISING_TRIGGER:
+			//no actions need to be performed in this state, just wait for transition
+			break;
+		case WAIT_FOR_FALLING_TRIGGER:
+			//TODO: use state delay timer to do the above
+			break;
+		case MOVE_TO_PICKUP:
+			setArmPosition(blockPosition, DEFUALT_Y_POSITION-(HEIGHT_ABOVE_BLOCK*10));
+			/*
+			p_ul((IR_POSITION_OFFSET+blockPosition)*10);
+			print("\t");
+			p_sl(DEFUALT_Y_POSITION-(HEIGHT_ABOVE_BLOCK*10));
+			print("\t");
+			p_sl(getLinkSetPointAngle('H'));
+			print("\t");
+			p_sl(getLinkSetPointAngle('L'));
+			println("");
+			 */
+			//allow time for block to reach arm
+			if (lastState != currentState) {
+				setStateDelayTimer(BLOCK_TRAVEL_TIME);
+			}
+			break;
+		case GRAB_BLOCK:
+			closeGripper();
+			//allow time for gripper to close
+			if (lastState != currentState) {
+				setStateDelayTimer(GRIPPER_CLOSE_TIME);
+			}
+			break;
+		case PICKUP_BLOCK:
+			setArmPosition(blockPosition, DEFUALT_Y_POSITION+(HEIGHT_ABOVE_BLOCK*10));
+			if (lastState != currentState) {
+				setStateDelayTimer(ARM_LIFT_TIME);
+			}
+			break;
+		case DETERMINE_WEIGHT:
+			 blockWeight = calculateCurrent(ADCVars.ADCValues[CURRENT_SENSE_0_ADC]) + calculateCurrent(ADCVars.ADCValues[CURRENT_SENSE_1_ADC]) > HEAVY_WEIGHT_THRESHOLD ? HEAVY : LIGHT;
+			break;
+		case MOVE_TO_SORT:
+			if (blockWeight == HEAVY) {
+				//TODO: fill me in
+			} else {
+				//TODO: fill me in
+			}
+			break;
+		default:
+			println("MISSING STATE ERROR 1 - PROGRAM HALTED");
+			while(1);
+	}
+	lastState = currentState;
+}
+
+TASKSTATE updateState(TASKSTATE currentState) {
+	if(!globals.timer2Running || globals.timer2Triggered) {
+		switch(currentState) {
+			case INITIALIZE:
+				currentState = READY_ARM;
+				break;
+			case READY_ARM:
+				currentState = WAIT_FOR_BLOCK1;
+				break;
+			case WAIT_FOR_BLOCK1:
+				if (ADCVars.ADCValues[BLOCK_SENSE_IR] > MIN_BLOCK_DETECTION_THRESHOLD) {
+					//we see a block!
+					currentState = WAIT_FOR_BLOCK2;
+				}
+				break;
+			case WAIT_FOR_BLOCK2:
+				if (ADCVars.ADCValues[BLOCK_SENSE_IR] > MIN_BLOCK_DETECTION_THRESHOLD) {
+					//we see a block!
+					currentState = PREP_FOR_PICKUP;
+				} else {
+					currentState = WAIT_FOR_BLOCK1;
+				}
+				break;
+			case PREP_FOR_PICKUP:
+				currentState = WAIT_FOR_RISING_TRIGGER;
+				//currentState = PREP_FOR_PICKUP;
+				break;
+			case WAIT_FOR_RISING_TRIGGER:
+				if (ADCVars.ADCValues[TRIGGER_IR] > MIN_BLOCK_DETECTION_THRESHOLD) {
+					//we see the leading edge of the block!
+					currentState = WAIT_FOR_FALLING_TRIGGER;
+				}
+				break;
+			case WAIT_FOR_FALLING_TRIGGER:
+				if (ADCVars.ADCValues[TRIGGER_IR] < MIN_BLOCK_DETECTION_THRESHOLD) {
+					//we see the leading edge of the block!
+					currentState = MOVE_TO_PICKUP;
+				}
+				break;
+			case MOVE_TO_PICKUP:
+				currentState = GRAB_BLOCK;
+				//currentState = MOVE_TO_PICKUP;
+				break;
+			/*case GRAB_BLOCK:
+				currentState = PICKUP_BLOCK;
+				break;
+			case PICKUP_BLOCK:
+				currentState = DETERMINE_WEIGHT;
+				break;
+			case DETERMINE_WEIGHT:
+				currentState = MOVE_TO_SORT;
+				break;
+				*/
+			default:
+				println("MISSING STATE ERROR 2 - PROGRAM HALTED");
+				while(1);
+		}
+		stopStateDelayTimer();
+	}
+	return currentState;
+}
+
+void printState(TASKSTATE currentState) {
+	static TASKSTATE lastState;
+	if (lastState!=currentState) {
+		switch(currentState) {
+			case INITIALIZE:
+				println("INITIALIZE");
+				break;
+			case READY_ARM:
+				println("READY_ARM");
+				break;
+			case WAIT_FOR_BLOCK1:
+				println("WAIT_FOR_BLOCK1");
+				break;
+			case WAIT_FOR_BLOCK2:
+				println("WAIT_FOR_BLOCK2");
+				break;
+			case PREP_FOR_PICKUP:
+				println("PREP_FOR_PICKUP");
+				break;
+			case WAIT_FOR_RISING_TRIGGER:
+				println("WAIT_FOR_RISING_TRIGGER");
+				break;
+			case WAIT_FOR_FALLING_TRIGGER:
+				println("WAIT_FOR_FALLING_TRIGGER");
+				break;
+			case MOVE_TO_PICKUP:
+				println("MOVE_TO_PICKUP");
+				break;
+			case GRAB_BLOCK:
+				println("GRAB_BLOCK");
+				break;
+			case PICKUP_BLOCK:
+				println("PICKUP_BLOCK");
+				break;
+			case DETERMINE_WEIGHT:
+				println("DETERMINE_WEIGHT");
+				break;
+			case MOVE_TO_SORT:
+				println("MOVE_TO_SORT");
+				break;
+			default:
+				println("Unknown state");
+				break;
+		}
+	}
+	lastState = currentState;
+}
+
+
+void setStateDelayTimer(float period) {
+	globals.timer2MaxCount = ((float)F_CPU/((unsigned long)240*256))*((float)period); //for CTC = 240, prescale = 256
+	globals.timer2CurrentCount = 0;
+	globals.timer2Triggered = 0;
+	InitTimer(2,CTC,240);
+	//change prescaler to 256
+	TCCR2Bbits._CS22 = 1;
+	TCCR2Bbits._CS21 = 1;
+	TCCR2Bbits._CS20 = 0;
+	globals.timer2Running = 1;
+}
+
+void stopStateDelayTimer() {
+	//turn off the state delay timer
+	TCCR2Bbits._CS22 = 0;
+	TCCR2Bbits._CS21 = 0;
+	TCCR2Bbits._CS20 = 0;
+	globals.timer2Triggered = 0;
+	globals.timer2Running = 0;
+}
+
+ISR(TIMER2_COMPA_vect) {
+	if(globals.timer2CurrentCount >= globals.timer2MaxCount) {
+		globals.timer2CurrentCount = 0;
+		globals.timer2Triggered = 1;
+	}
+	globals.timer2CurrentCount++;
+}

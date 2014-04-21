@@ -1,0 +1,43 @@
+/*
+ * accelerometer.h
+ *
+ *  Created on: Feb 12, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#ifndef ACCELEROMETER_H_
+#define ACCELEROMETER_H_
+
+#include "main.h"
+
+#define ACCEL_SS 5 //PORT C
+
+#define OP_START 0x80
+//Input configurations
+#define OP_SINGLE_ENDED 0x40
+#define OP_DIFFERENTIAL 0x00
+//Channels
+#define OP_XAXIS 0x00
+#define OP_YAXIS 0x08
+#define OP_ZAXIS 0x10
+#define OP_VREF 0x18
+//Shift in waiting
+#define OP_READ 0x00
+
+typedef struct {
+	volatile uint16_t vref;
+	volatile uint16_t x;
+	volatile uint16_t y;
+	volatile uint16_t z;
+	volatile uint8_t newDataAvailable;
+	volatile uint8_t timerMaxCount;
+	volatile uint8_t timerCurrentCount;
+} Accel;
+
+extern Accel accel;
+
+void initAccelerometer();
+uint16_t GetAccelerationH48C(char axis);
+
+#endif /* ACCELEROMETER_H_ */

@@ -1,0 +1,47 @@
+/*
+ * ADC.c
+ *
+ *  Created on: Jan 22, 2014
+ *      Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+ */
+
+#include "main.h"
+
+void InitADC(unsigned char channel) {
+	//Set ADC voltage reference to AVCC with external capacitor at AREF pin (5V)
+	ADMUXbits._REFS1 = 0;
+	ADMUXbits._REFS0 = 1;
+
+	//Set the channel
+	ADMUX &= 0b11100000;
+	ADMUX |= channel;
+
+	//Enable the ADC
+	ADCSRAbits._ADEN = 1;
+
+	//Enable ADC interrupts
+	ADCSRAbits._ADIE = 1;
+}
+
+void ClearADC(unsigned char channel) {
+
+}
+
+unsigned short GetADC(unsigned char channel) {
+
+	//Select the channel
+	ADMUX &= 0b11100000;
+	ADMUX |= channel;
+
+	//Start an ADC conversion
+	ADCSRAbits._ADSC = 1;
+
+	//wait for conversion to complete
+	//while (!ADCSRAbits._ADIF) {}
+	while(ADCSRA & (1<<ADSC));
+
+	return ADC;
+}
+
+
+

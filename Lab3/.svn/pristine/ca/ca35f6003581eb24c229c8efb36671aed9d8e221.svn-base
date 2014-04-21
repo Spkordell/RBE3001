@@ -1,0 +1,73 @@
+/*
+ * accelerometer.c
+ *
+ *  Created on: Feb 12, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#include "main.h"
+
+Accel accel;
+
+void initAccelerometer() {
+	GenericSPIInit();
+
+	//TODO: Double Check port and pin for SS
+
+	//Set SS to output
+	DDRC |=  1 << ACCEL_SS;
+	//set SS high
+	PORTC |= 1 << ACCEL_SS;
+
+	SPITransceive(    ); //todo finish this
+	//https://my.wpi.edu/bbcswebdav/pid-276133-dt-content-rid-1385566_1/courses/RBE3001-C14-MASTER/accelerometer_module_schematic%282%29.pdf
+	//http://ww1.microchip.com/downloads/en/DeviceDoc/21298c.pdf
+
+	/*
+	accel.newDataAvailable = 0;
+	//Initialize the ADC in auto-trigger mode for the specified channels (This lets us sample as fast as possible without using any busy waiting)
+	initFreeRunMultiADCChannels(1 << ACCEL_X | 1 << ACCEL_Y | 1 << ACCEL_Z);
+	//Set timer to sample at 500 hz
+	accel.timerMaxCount = (F_CPU/(192*64))*((float)1/500); // = 3 for CTC = 192, prescale = 64, and frequency = 500
+	accel.timerCurrentCount = 0;
+	InitTimer(0,CTC,192);
+	//adjust the prescaler to F_CPU/64 to reduce the number of interrupts
+	TCCR0Bbits._CS02 = 0;
+	TCCR0Bbits._CS01 = 1;
+	TCCR0Bbits._CS00 = 1;
+	*/
+}
+
+//Reads 12-bit data from the H48C accelerometer module.
+uint16_t GetAccelerationH48C(char axis) {
+
+	//todo this is wrong, fix it to use SPI
+
+	if (axis == 'x') {
+		return accel.x;
+	} else if (axis == 'y'){
+		return accel.y;
+	} else if (axis == 'z'){
+		return accel.z;
+	} else {
+		return 0;
+	}
+
+}
+
+ISR(TIMER0_COMPA_vect) {
+	//todo: this is wrong, fix it to use SPI
+
+	if(accel.timerCurrentCount >= accel.timerMaxCount) {
+		accel.timerCurrentCount = 0;
+		//latch in the most recent ADC readings
+		accel.x = ADCVars.ADCValues[ACCEL_X];
+		accel.y = ADCVars.ADCValues[ACCEL_Y];
+		accel.z = ADCVars.ADCValues[ACCEL_Z];
+		//Set a flag to alert that new Data is available
+		accel.newDataAvailable = 1;
+	} else {
+		accel.timerCurrentCount++;
+	}
+}

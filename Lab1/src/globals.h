@@ -1,0 +1,38 @@
+/*
+* globals.h
+*
+* Created on: Feb 6, 2013
+* Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+*
+* Defines and declares the global struct.
+*
+*/
+#ifndef GLOBALS_H_
+#define GLOBALS_H_
+
+#include "main.h"
+
+typedef struct {
+	volatile unsigned short ADCValue;
+	volatile unsigned long int timeStamp;
+	volatile unsigned int Second;
+	volatile unsigned int Minute;
+	volatile unsigned int Hour;
+	volatile uint16_t PWMCurrentCount;
+	uint8_t PWMPort;
+	uint8_t PWMPin;
+	uint16_t PWMHighTime;
+	uint16_t PWMMaxTime;
+	uint16_t PWMCompare;
+	float PWMFrequency;
+	float PWMDuty;
+	volatile uint8_t sampleDataAvailable;
+	volatile uint16_t elapsedCycles;
+	volatile float latchedCycles;
+} Globals;
+
+extern Globals globals; // declaration
+
+void initGlobals();
+
+#endif /* GLOBALS_H_ */

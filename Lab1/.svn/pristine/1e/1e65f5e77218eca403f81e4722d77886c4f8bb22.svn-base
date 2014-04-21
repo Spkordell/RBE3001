@@ -1,0 +1,16 @@
+/*
+ * PWM.h
+ *
+ *  Created on: Jan 24, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#ifndef PWM_H_
+#define PWM_H_
+
+#include "main.h"
+
+void initPWM(uint8_t port, uint8_t pin, float frequency, uint8_t duty);
+
+#endif /* PWM_H_ */

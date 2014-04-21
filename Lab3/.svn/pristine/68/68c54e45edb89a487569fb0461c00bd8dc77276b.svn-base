@@ -1,0 +1,48 @@
+/*
+ * main.c
+ *
+ *  Created on: Feb 11, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+Globals globals;
+
+int main() {
+	DebugUSARTInit(DEFAULT_BAUD);
+	initGlobals();
+
+	InitADC(0);
+	InitADC(1);
+	InitADC(2);
+	globals.accelMaxCount = (F_CPU/255)*((float)1/100);
+	globals.accelCurrentCount = 0;
+	InitTimer(0,NORMAL,0);
+	//TODO: change prescaler
+
+	while(1) {
+		if (globals.accelSampleDataAvailable) {
+			p_ul(globals.accelX);
+			print("\t");
+			p_ul(globals.accelY);
+			print("\t");
+			p_ul(globals.accelZ);
+			println("");
+			globals.accelSampleDataAvailable = 0;
+		}
+	}
+	return 0;
+}
+
+ISR(TIMER0_COMPA_vect) {
+	if(globals.accelCurrentCount >= globals.accelMaxCount) {
+		globals.accelCurrentCount = 0;
+		globals.accelX = GetADC(0);
+		globals.accelY = GetADC(1);
+		globals.accelZ = GetADC(2);
+		globals.accelSampleDataAvailable = 1;
+	} else {
+		globals.accelCurrentCount++;
+	}
+}

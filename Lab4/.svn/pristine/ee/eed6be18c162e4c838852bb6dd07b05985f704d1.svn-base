@@ -1,0 +1,81 @@
+/*
+ *				a t o f . c
+ */
+
+/*)LIBRARY
+*/
+
+/*
+ *
+ * Because of incompatibilities with RBELIb, it was necessary to include the atof function separately. This declaration is nearly identical to the one found in stdlib.c
+ *
+ */
+
+#include <math.h>
+#define PZERO 38			/* index of 1e0 in powten[]	*/
+#define PMAX 76				/* highest index of powten[]	*/
+#define HUGE_NOR 1.70141183460469228		/* normalised HUGE	*/
+double myatof(s) /* convert string s to double */
+char s[];
+{
+	double powten[] = {1e-38, 1e-37, 1e-36, 1e-35, 1e-34, 1e-33,
+		1e-32, 1e-31, 1e-30, 1e-29, 1e-28, 1e-27, 1e-26, 1e-25, 1e-24,
+		1e-23, 1e-22, 1e-21, 1e-20, 1e-19, 1e-18, 1e-17, 1e-16, 1e-15,
+		1e-14, 1e-13, 1e-12, 1e-11, 1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5,
+		1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7,
+		1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18,
+		1e19, 1e20, 1e21, 1e22, 1e23, 1e24, 1e25, 1e26, 1e27, 1e28, 1e29,
+		1e30, 1e31, 1e32, 1e33, 1e34, 1e35, 1e36, 1e37, 1e38};
+    double val;
+    int i, j, sign, esign, ex, ex1;
+
+/* skip white space */
+    for (i=0; s[i]==' ' || s[i]=='\n' || s[i]=='\t'; i++);
+/* set sign to be +1 or -1 */
+    sign = 1;
+    if (s[i] == '+' || s[i] == '-')    /* sign */
+	sign = (s[i++]=='+') ? 1 : -1;
+/* read digits and build value for as long as there are digits */
+    ex = PZERO - 1;
+    for (val = 0.0, j = PZERO; s[i] >= '0' && s[i] <= '9'; i++) {
+	if (j >= 0)
+	    val += powten[j] * (s[i] - '0');
+	j--;
+	ex++;
+    }
+/* if first non-digit is decimal point skip it and keep going */
+/* if it is not a decimal point we fall through to test for exponent */
+    if (s[i] == '.')
+	i++;
+/* continue to build value while the digits keep coming */
+    for (; s[i] >= '0' && s[i] <= '9'; i++){
+	if (j >= 0)
+	    val += powten[j] * (s[i] - '0');
+	j--;
+    }
+/* if non-digit was an exponent flag deal with exponent */
+    if (s[i]=='e' || s[i]=='E' || s[i]=='d' || s[i]=='D') {
+	i++;
+	esign = 1;
+/* check for explicit + or - sign in exponent and deal with it */
+	if (s[i] == '+' || s[i] == '-')
+	    esign = (s[i++]=='+') ? 1 : -1;
+	for (ex1 = 0; s[i] >= '0' && s[i] <= '9'; i++)
+	    ex1 = 10 * ex1 + s[i] - '0';
+	ex += ex1 * esign;
+    }
+/* incorporate exponent into val */
+    if (ex < 0)
+	val = 0.0;
+    else if (ex < PMAX || (ex == PMAX && val < HUGE_NOR))
+	val *= powten[ex];
+    else {
+	//cmemsg(FP_BIGI, s);
+	//val = HUGE;
+    }
+/* check that we have an acceptable termination; if not call error system
+   before returning with what we have */
+    //if (s[i] != ' ' && s[i] != '\t' && s[i] != '\n' && s[i] != '\0')
+	//cmemsg(FP_BADC, s);
+    return(sign * val);
+}

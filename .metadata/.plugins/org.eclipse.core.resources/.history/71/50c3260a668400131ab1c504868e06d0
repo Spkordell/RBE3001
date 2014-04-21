@@ -1,0 +1,54 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+//function prototypes
+void printData(unsigned short ADCValue);
+
+#define POTCHAN 4 //define channel the potentiometer is connected to
+//#define PWM
+Globals globals; //Create struct to store global variables
+
+int main() {
+	DebugUSARTInit(DEFAULT_BAUD);	//initialize USART
+	initGlobals();	//Initialize globals
+
+#ifndef PWM
+
+	//wait for start command from computer
+	print("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+
+	initAutoADC(POTCHAN); //InitializeADC for auto-conversion
+	while(1) {
+		printData(globals.ADCValue);
+	}
+
+
+#else
+	//DDRB |= (1<<PB0);
+	//InitTimer(0,2,25);
+#endif
+
+	return 0;
+}
+
+/*
+ * Transmits formated pot values over serial
+ */
+void printData(unsigned short ADCValue) {
+	//TODO: time stamps is wrong, should be hours/minutes/seconds.00 since program start.
+	p_ul(globals.timeStamp++);
+	print(",");
+	p_ul(globals.ADCValue);
+	print(",");
+	print("output in milivolts here");
+	print(",");
+	print("angle here");
+	println("");
+}

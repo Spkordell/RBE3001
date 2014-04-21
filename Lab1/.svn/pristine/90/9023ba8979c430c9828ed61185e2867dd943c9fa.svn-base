@@ -1,0 +1,22 @@
+/*
+ * externalInterrupt.c
+ *
+ *  Created on: Jan 25, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+void configureButtonInterrupts() {
+	//configure buttons as inputs
+	DDRD &= ~(PD7|PD6|PD5|PD4); //clear bits
+
+	//enable pin change interrupts
+	PCIFRbits._PCIF3 = 1;
+	PCMSK3bits._PCINT31 = 1;
+	PCMSK3bits._PCINT30 = 1;
+	PCMSK3bits._PCINT29 = 1;
+	PCMSK3bits._PCINT28 = 1;
+}
+
+

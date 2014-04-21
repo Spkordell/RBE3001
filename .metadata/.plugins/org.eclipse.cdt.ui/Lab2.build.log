@@ -1,0 +1,20 @@
+19:18:03 **** Incremental Build of configuration Release for project Lab2 ****
+make all 
+Invoking: Print Size
+avr-size --format=avr --mcu=atmega644p Lab2.elf
+AVR Memory Usage
+----------------
+Device: atmega644p
+
+Program:   10196 bytes (15.6% Full)
+(.text + .data + .bootloader)
+
+Data:       3437 bytes (83.9% Full)
+(.data + .bss + .noinit)
+
+
+Finished building: sizedummy
+ 
+
+19:18:08 Build Finished (took 4s.327ms)
+

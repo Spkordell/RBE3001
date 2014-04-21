@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+externalMigrateFromAuthorizationDatabase/isMigrated=true
+migrateFromAuthorizationDatabase/isMigrated=true
+repositories/00f1a59e6e80001313bd98d0fd9b21a1=00f1a59e6e80001313bd98d0fd9b21a1;https\://fusion.wpi.edu/svn/rbe3001c14team6/trunk;https\://fusion.wpi.edu/svn/rbe3001c14team6/trunk;branches;tags;trunk;true;d9747ce2-405e-4110-b05b-c78f46f0bf65;https\://fusion.wpi.edu/svn/rbe3001c14team6;;false;<https\://fusion.wpi.edu\:443> Document repository;;0
+repositories/c005709100800013161d873fa5d964d8=c005709100800013161d873fa5d964d8;https\://fusion.wpi.edu/svn/rbelibc2014/trunk;https\://fusion.wpi.edu/svn/rbelibc2014/trunk;branches;tags;trunk;true;2d411448-36ec-4eb4-b109-8840bd280d36;https\://fusion.wpi.edu/svn/rbelibc2014;;false;<https\://fusion.wpi.edu\:443> Document repository;;0
+synch_info/contigous=true

@@ -1,0 +1,318 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+ *
+ */
+
+#include "main.h"
+
+Globals globals;
+
+int main() {
+	initGlobals();	//Initialize globals
+	DebugUSARTInit(DEFAULT_BAUD); //initialize USART
+	println("Chip Reset");
+
+
+#if LAB_PART == 'B'
+
+#if MODE == KINEMATICS_DATA_MODE
+	float x;
+	float y;
+	initFreeRunADCAllChannels(); //Initialize Auto ADC
+	while(1) {
+		calcFPK(&x,&y,getLinkAngle('L'), getLinkAngle('H'));
+		printKinData(x, y);
+	}
+#endif
+
+#if MODE == XY_POSITION_MODE
+	initDAC(); 	//initialize the DAC
+	initPID(0.01); //Initialize the PID variables //0.01
+	initFreeRunADCAllChannels(); //Initialize Auto ADC
+	configureButtonInterrupts(); //Initialize Button Interrupts (for selecting desired position)
+	setArmPosition(0,230); //Set initial Arm Position
+	setConst('H', 19.000, 0.750, 1.005);  //Set high link PID Constants
+	setConst('L',45.000, 1.000, 0.200);	//set low link PID Constants
+	startPID(); //Starts the timer and begins the PID operations
+	float x;
+	float y;
+	while(1) { //todo, add gravity compensation functions to kinematics.c
+		driveLink('H',globals.highLinkPIDOut+((int)cos(getLinkAngle('H')*RADIANS_PER_DEGREE)*500)); //500 is m*l*g
+		driveLink('L',globals.lowLinkPIDOut+((int)cos(getLinkAngle('L')*RADIANS_PER_DEGREE)*500)); //500 is m*l*g
+		calcFPK(&x,&y,getLinkAngle('L'), getLinkAngle('H'));
+		printKinData(x, y);
+	}
+#endif
+
+
+#if MODE == DRAW_TRIANGLE_MODE
+
+	while(1);
+#endif
+
+#endif
+
+
+#if LAB_PART == 'A'
+
+#if MODE == ARM_DATA_MODE
+	initFreeRunADCAllChannels(); //Initialize Auto ADC
+	//wait for start command from computer
+	println("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+	while(1) {
+		printArmData();
+	}
+#endif
+
+#if MODE == DAC_DEMO_MODE
+	initDAC();
+	int DAC0Value = 0;
+	int DAC1Value = 4095;
+	signed char DAC0State = 1;
+	signed char DAC1State = -1;
+	while(1) {
+		setDAC(0,DAC0Value);
+		setDAC(1,DAC1Value);
+		if(DAC0Value >= 4095) {
+			DAC0State = -1;
+		}
+		if(DAC1Value >= 4095) {
+			DAC1State = -1;
+		}
+		if(DAC0Value <= 0) {
+			DAC0State = 1;
+		}
+		if(DAC1Value <= 0) {
+			DAC1State = 1;
+		}
+		DAC0Value+=DAC0State;
+		DAC1Value+=DAC1State;
+	}
+#endif
+
+#if MODE == DRIVE_ARM_MODE
+	initDAC();
+	while(1) {
+		driveLink('H',1000);
+		driveLink('L',-1000);
+		for (long i=0; i<2000000;i++) {
+		}
+		driveLink('H',-1000);
+		driveLink('L',1000);
+		for (long i=0; i<2000000;i++) {
+		}
+	}
+#endif
+
+#if MODE == CURRENT_SENSE_MODE
+	initDAC(); 	//initialize the DAC
+	initFreeRunADCAllChannels(); //Initialize Auto ADC
+	configureButtonInterrupts(); //Initialize Button Interrupts (for selecting setpoint since we don't have another pot)
+	while(1) {
+		//globals.armHighLinkPot = globals.ADCValues[ARM_HIGH_LINK_POT]; //Need to update arm state
+		//Print current sensor data
+		p_ul(globals.ADCValues[CURRENT_SENSE_0_ADC]);
+		print(",");
+		p_fl(calculateCurrent(globals.ADCValues[CURRENT_SENSE_0_ADC]));
+		print("\t");
+		p_ul(globals.ADCValues[CURRENT_SENSE_1_ADC]);
+		print(",");
+		p_fl(calculateCurrent(globals.ADCValues[CURRENT_SENSE_1_ADC]));
+		println("");
+	}
+
+#endif
+
+#if MODE == PID_MODE_HIGH || MODE == PID_MODE_LOW
+	#if MODE == PID_MODE_HIGH
+		char modeC = 'H';
+	#else
+		char modeC = 'L';
+	#endif
+	// These seem to work pretty well (without gravity compensation):
+	//P = 22.100, I = 3.550 D = 1.860 //Good response, a little overshoot
+	//P = 21.630  I = 0.700 D = 0.000 //Good response, very little overshoot
+	//P = 26.110, I = 0.550 D = 5.115 //Good response, some undershoot
+
+	// These seem to work pretty well (with gravity compensation):
+	// Power Supply: 12V; Current: 3A
+
+	//PID VALUES FOR PART A ON HIGH LINK
+	//P = 20.000, I = 0.000, D = 1.500  //Good Response, almost exact
+	//P = 18.500, I = 0.000, D = 0.000  //Good Response, almost exact
+	//P = 15.200, I = 1.550, D = 0.000  //Very good response, closest yet
+	//P = 19.000, I = 0.750, D = 1.005  // Very good @ 45  //used to be 17 P before moving to diff station
+
+	//PID VALUES FOR PART B ON LOW LINK
+	//P = 45.000, I = 1.000, D = 0.200  //Works really well; very close to actual
+
+	//wait for start command from computer
+	println("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+
+	initDAC(); 	//initialize the DAC
+	initPID(0.01); //Initialize the PID variables //1
+	initFreeRunADCAllChannels(); //Initialize Auto ADC
+	setLinkAngle(modeC,0);
+	startPID(); //Starts the timer and begins the PID operations
+	configureButtonInterrupts(); //Initialize Button Interrupts (for selecting setpoint)
+	while(1) {
+		printPIDValues();
+		//setConst(modeC, (float)25.2, (float)1.55, (float)0.00);
+		setConst(modeC, (float)globals.ADCValues[KP_POT]*PID_POT_KP_MULTIPLE, (float)globals.ADCValues[KI_POT]*PID_POT_KI_MULTIPLE, (float)globals.ADCValues[KD_POT]*PID_POT_KD_MULTIPLE); //Update the PID constants
+		#if ENABLE_GRAVITY_COMPENSATION
+			#if MODE == PID_MODE_HIGH
+				driveLink(modeC,globals.highLinkPIDOut+((int)cos(getLinkAngle(modeC)*RADIANS_PER_DEGREE)*500)); //500 is m*l*g
+			#else
+				driveLink(modeC,globals.lowLinkPIDOut+((int)cos(getLinkAngle(modeC)*RADIANS_PER_DEGREE)*500)); //500 is m*l*g
+			#endif
+		#else
+			#if MODE == PID_MODE_HIGH
+			driveLink(modeC,globals.highLinkPIDOut);
+			#else
+			driveLink(modeC,globals.lowLinkPIDOut);
+			#endif
+
+
+		#endif
+	}
+
+#endif
+#endif
+	return 0;
+}
+
+ISR(PCINT2_vect) {
+#if MODE == XY_POSITION_MODE
+	if(!PINCbits._P7) {
+		setArmPosition(-64,134);
+	}
+	if(!PINCbits._P6) {
+		setArmPosition(0,230);
+	}
+	if(!PINCbits._P5) {
+		setArmPosition(230,0);
+	}
+	if(!PINCbits._P4) {
+		setArmPosition(155,-76);
+	}
+#endif
+#if MODE == PID_HIGH_MODE || MODE == PID_LOW_MODE
+	#if MODE == PID_MODE_HIGH
+		char modeC = 'H';
+	#else
+		char modeC = 'L';
+	#endif
+		if(!PINCbits._P7) {
+			setLinkAngle(modeC,0);
+			println("");
+		}
+		if(!PINCbits._P6) {
+			setLinkAngle(modeC,30);
+		}
+		if(!PINCbits._P5) {
+			setLinkAngle(modeC,45);
+		}
+		if(!PINCbits._P4) {
+			setLinkAngle(modeC,90);
+		}
+#endif
+#if MODE == CURRENT_SENSE_MODE
+	if(!PINCbits._P6) {
+		driveLink('H',4095);
+		driveLink('L',4095);
+	}
+	if(!PINCbits._P5) {
+		driveLink('H',-4095);
+		driveLink('L',-4095);
+	}
+	if(!PINCbits._P4) {
+		driveLink('H',0);
+		driveLink('L',-0);
+	}
+#endif
+}
+
+/*
+ * Prints the Orientation of potentiometer in ADC counts, pot output in millivolts, and arm orientation in degrees.
+ */
+void printArmData() {
+	int LOW_ADC_Val = globals.ADCValues[ARM_LOW_LINK_POT];
+	int HIGH_ADC_Val = globals.ADCValues[ARM_HIGH_LINK_POT];
+	p_ul(LOW_ADC_Val);
+	print(",");
+	p_ul(HIGH_ADC_Val);
+	print(",");
+	p_ul(LOW_ADC_Val*((float)5/1023)*1000);
+	print(",");
+	p_ul(HIGH_ADC_Val*((float)5/1023)*1000);
+	print(",");
+	p_fl(getLinkAngle('L'));
+	print(",");
+	p_fl(getLinkAngle('H'));
+	println("");
+}
+
+void printADCValues() {
+	p_ul(globals.ADCValues[ARM_HIGH_LINK_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[ARM_LOW_LINK_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[KP_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[KI_POT]);
+	print("\t");
+	p_ul(globals.ADCValues[KD_POT]);
+	println("");
+}
+
+void printPIDValues(){
+
+#if MODE == PID_MODE_HIGH
+	p_fl(getLinkSetPointAngle('H'));
+	print(",");
+	p_fl(getLinkAngle('H'));
+	print(",");
+	p_fl(calculateCurrent(globals.ADCValues[CURRENT_SENSE_1_ADC])*1000);
+
+	print("\t");
+	p_fl(pidConst.Kp_H);
+	print("\t");
+	p_fl(pidConst.Ki_H);
+	print("\t");
+	p_fl(pidConst.Kd_H);
+#else
+	p_fl(getLinkSetPointAngle('L'));
+	print(",");
+	p_fl(getLinkAngle('L'));
+	print(",");
+	p_fl((float)(globals.lowLinkPIDOut+(cos(getLinkAngle('L')*RADIANS_PER_DEGREE)*500))*(DAC_MAX_VOLTAGE/DAC_MAX_VALUE)*1000);
+	print(",");
+	p_fl(calculateCurrent(globals.ADCValues[CURRENT_SENSE_0_ADC])*1000);
+
+	print("\t");
+	p_fl(pidConst.Kp_L);
+	print("\t");
+	p_fl(pidConst.Ki_L);
+	print("\t");
+	p_fl(pidConst.Kd_L);
+#endif
+
+
+	println("");
+}
+
+void printKinData(float x, float y){
+	p_fl(x);
+	print("\t");
+	p_fl(y);
+	print("\t");
+	p_fl(getLinkAngle('L'));
+	print("\t");
+	p_fl(getLinkAngle('H'));
+	println("");
+}

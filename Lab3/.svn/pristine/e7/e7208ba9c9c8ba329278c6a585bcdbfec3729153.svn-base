@@ -1,0 +1,15 @@
+/*
+ * accelerometer.h
+ *
+ *  Created on: Feb 12, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#ifndef ACCELEROMETER_H_
+#define ACCELEROMETER_H_
+
+#include "main.h"
+
+
+#endif /* ACCELEROMETER_H_ */

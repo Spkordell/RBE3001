@@ -1,0 +1,16 @@
+/*
+ * autoADC.h
+ *
+ *  Created on: Jan 22, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#ifndef AUTOADC_H_
+#define AUTOADC_H_
+
+#include "main.h"
+
+void initAutoADC(unsigned char channel);
+
+#endif /* AUTOADC_H_ */

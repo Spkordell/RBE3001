@@ -1,0 +1,86 @@
+/*
+ * shape.c
+ *
+ *  Created on: Feb 10, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+ShapeVars shapeVars;
+
+void smoothArc(float lowAngle1, float highAngle1, float lowAngle2, float highAngle2, float rate, float resolution) {
+	shapeVars.t = 0;
+	shapeVars.lowAngle1 = lowAngle1;
+	shapeVars.highAngle1 = highAngle1;
+	shapeVars.resolution = resolution;
+	shapeVars.dLowAngle = lowAngle2-lowAngle1;
+	shapeVars.dHighAngle = highAngle2-highAngle1;
+
+	shapeVars.rateTimerMaxCount = (F_CPU/255)*((float)1/rate); //TODO: calculate bettere CTC value
+	shapeVars.rateTimerCurrentCount = 0;
+	InitTimer(2,CTC,255);
+}
+
+void fillShapeBuffer(char* buffer) {
+	shapeVars.shapeBuffer = buffer;
+	shapeVars.shapeBufferEmpty = 0;
+}
+
+/*
+void drawNextShape() {
+	const char* subStart;
+	while(*shapeVars.shapeBuffer == ' ' || *shapeVars.shapeBuffer == 'A') shapeVars.shapeBuffer++;
+	subStart = shapeVars.shapeBuffer;
+	while(*shapeVars.shapeBuffer != ','){
+		shapeVars.shapeBuffer++;
+	}
+	*shapeVars.shapeBuffer='\0';
+	float lowAngle = atof(subStart);
+	subStart = shapeVars.shapeBuffer;
+	while(*shapeVars.shapeBuffer != ' '){
+		shapeVars.shapeBuffer++;
+	}
+	*shapeVars.shapeBuffer='\0';
+	float highAngle = atof(subStart);
+	*shapeVars.shapeBuffer= ' ';
+}
+*/
+
+ISR(TIMER2_COMPA_vect) {
+	if(shapeVars.rateTimerCurrentCount >= shapeVars.rateTimerMaxCount) {
+		shapeVars.rateTimerCurrentCount = 0;
+		while(shapeVars.t <= 1) {
+			setLinkAngle('L',shapeVars.lowAngle1+shapeVars.dLowAngle*shapeVars.t);
+			setLinkAngle('H',shapeVars.highAngle1+shapeVars.dHighAngle*shapeVars.t);
+			shapeVars.t += shapeVars.resolution;
+		}
+	} else {
+		shapeVars.rateTimerCurrentCount++;
+	}
+}
+
+
+/*
+void drawLine(float x1, float y1, float x2, float y2, float resolution) {
+	float x,y;
+	float t = 0;
+	float dx = x2-x1;
+	float dy = y2-y1;
+	while (t <= 1) {
+		x = x1 + dx*t;
+		y = y1 + dy*t;
+		setArmPosition(x,y);
+		driveArm();
+		t+=resolution;
+	}
+}
+
+void drawEqTriangle(float centerX, float centerY, float size, float resolution) {
+	float dx = size*cos(30*RADIANS_PER_DEGREE);
+	float dy = size*cos(30*RADIANS_PER_DEGREE);
+	drawLine(centerX, centerY+size, centerX+dx, centerY-dy, resolution);
+	drawline(centerX+dx, centerY-dy, centerX-dx, centerY-dy, resolution);
+	drawline(centerX-dx, centerY-dy, centerX, centerY+size, resolution);
+}
+*/

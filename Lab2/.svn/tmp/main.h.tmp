@@ -1,0 +1,74 @@
+/*
+* main.h
+*
+* Created on: Jul 4, 2013
+* Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+*/
+#ifndef MAIN_H_
+#define MAIN_H_
+
+//dependencies
+#include "DAC.h"
+#include "PID.h"
+#include "RBELib/RBELib.h"
+#include <avr/io.h>
+#include "autoADC.h"
+#include "globals.h"
+#include "armActuator.h"
+#include "buttonInterrupts.h"
+#include "currentSensor.h"
+
+//ADC input channels
+#define CURRENT_SENSE_0_ADC 0
+#define CURRENT_SENSE_1_ADC 1
+#define ARM_LOW_LINK_POT 2
+#define ARM_HIGH_LINK_POT 3
+#define KP_POT 4
+#define KI_POT 5
+#define KD_POT 6
+#define SETPOINT_POT 7
+
+<<<<<<< .mine
+//Potentiometer settings
+#define POTANGLE 300
+=======
+#define POT_ANGLE 314
+#define ADC_RANGE 1023
+#define POT0_ADC_CENTER 670
+#define POT90_ADC_MIN 320
+#define POT90_ADC_MAX 1020
+#define POT_ADC_RANGE (POT90_ADC_MAX-POT90_ADC_MIN)
+
+
+>>>>>>> .r57
+#define PID_POT_KP_MULTIPLE .15
+#define PID_POT_KI_MULTIPLE .01
+#define PID_POT_KD_MULTIPLE .005
+
+<<<<<<< .mine
+=======
+//Function prototypes
+void printArmData();
+void printADCValues();
+void printPIDValues();
+
+>>>>>>> .r57
+//Program operation modes
+#define ARM_DATA_MODE 4
+#define DAC_DEMO_MODE 5
+#define DRIVE_ARM_MODE 6
+#define CURRENT_SENSE_MODE 7
+#define PID_MODE 8
+
+//current operation mode
+<<<<<<< .mine
+#define MODE CURRENT_SENSE_MODE
+=======
+#define MODE ARM_DATA_MODE
+>>>>>>> .r57
+
+//Function prototypes
+void printArmData(unsigned short ADCValue);
+void printADCValues();
+void printPIDValues();
+#endif /* MAIN_H_ */

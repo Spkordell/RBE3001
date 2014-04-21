@@ -1,0 +1,13 @@
+/*
+ * main.c
+ *
+ *  Created on: Jan 19, 2014
+ *      Author: Steven
+ */
+
+int main() {
+	while(1) {
+
+	}
+	return 0;
+}

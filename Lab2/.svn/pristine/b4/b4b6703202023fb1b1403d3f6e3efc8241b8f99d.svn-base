@@ -1,0 +1,30 @@
+/*
+ * SPI.c
+ *
+ *  Created on: Jan 29, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+
+void GenericSPIInit(void) {
+	// Set MOSI and SCK output
+	DDRBbits._P7 = OUTPUT;
+	DDRBbits._P5 = OUTPUT;
+	//Set MISO to input
+	DDRBbits._P6 = INPUT;
+
+	SPCRbits._SPE = 1; 	//Enable SPI
+	SPCRbits._MSTR = 1; //Set master mode
+	SPCRbits._SPR0 = 1; //set clock rate f_cpu/16
+}
+
+BYTE SPITransceive(BYTE data) {
+	//Starts transmission
+	SPDR = data;
+	// Wait for transmission to complete
+	while (!(SPSR & (1<<SPIF)));
+	//Read any received data
+	return SPDR;
+}

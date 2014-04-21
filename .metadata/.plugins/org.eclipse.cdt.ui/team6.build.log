@@ -1,0 +1,20 @@
+15:06:24 **** Incremental Build of configuration Release for project Team6 ****
+make all 
+Invoking: Print Size
+avr-size --format=avr --mcu=atmega644p Team6.elf
+AVR Memory Usage
+----------------
+Device: atmega644p
+
+Program:    1016 bytes (1.6% Full)
+(.text + .data + .bootloader)
+
+Data:          4 bytes (0.1% Full)
+(.data + .bss + .noinit)
+
+
+Finished building: sizedummy
+ 
+
+15:06:25 Build Finished (took 402ms)
+

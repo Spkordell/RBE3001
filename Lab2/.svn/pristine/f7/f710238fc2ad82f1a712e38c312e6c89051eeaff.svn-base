@@ -1,0 +1,41 @@
+/*
+ * DAC.c
+ *
+ *  Created on: Jan 29, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+void setDAC(unsigned char DACn, unsigned int SPIVal){
+
+	println("1");
+
+	//Is SPI set up right?
+	//RIght clock frequency
+	//right clock polarity and edge?
+
+
+	//write DAC CS signal low
+	DDRDbits._P4 = 0;
+
+	//transmit command and address
+	//Command: Write to and Update (Power Up) DAC Register n 0b0011
+	//SPITransceive(0b00110000|DACn);
+	//transmit data
+	//SPITransceive(SPIVal << 4);
+	//SPITransceive(SPIVal << 12);
+
+	println("2");
+	SPITransceive(0b00100000);
+	println("3");
+	SPITransceive(SPIVal << 4);
+	println("4");
+	SPITransceive(SPIVal << 12);
+	println("5");
+	//SPITransceive(0);
+	//SPITransceive(0);
+
+	//write DAC CS signal high
+	DDRDbits._P4 = 1;
+}

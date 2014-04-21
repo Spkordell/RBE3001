@@ -1,0 +1,107 @@
+00:20:02 **** Incremental Build of configuration Release for project Lab4 ****
+make all 
+Building file: ../src/ADC.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/ADC.d" -MT"src/ADC.d" -c -o "src/ADC.o" "../src/ADC.c"
+Finished building: ../src/ADC.c
+ 
+Building file: ../src/DAC.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/DAC.d" -MT"src/DAC.d" -c -o "src/DAC.o" "../src/DAC.c"
+Finished building: ../src/DAC.c
+ 
+Building file: ../src/PID.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/PID.d" -MT"src/PID.d" -c -o "src/PID.o" "../src/PID.c"
+Finished building: ../src/PID.c
+ 
+Building file: ../src/SPI.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/SPI.d" -MT"src/SPI.d" -c -o "src/SPI.o" "../src/SPI.c"
+Finished building: ../src/SPI.c
+ 
+Building file: ../src/USARTDebug.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/USARTDebug.d" -MT"src/USARTDebug.d" -c -o "src/USARTDebug.o" "../src/USARTDebug.c"
+Finished building: ../src/USARTDebug.c
+ 
+Building file: ../src/armActuator.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/armActuator.d" -MT"src/armActuator.d" -c -o "src/armActuator.o" "../src/armActuator.c"
+Finished building: ../src/armActuator.c
+ 
+Building file: ../src/autoADC.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/autoADC.d" -MT"src/autoADC.d" -c -o "src/autoADC.o" "../src/autoADC.c"
+Finished building: ../src/autoADC.c
+ 
+Building file: ../src/currentSensor.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/currentSensor.d" -MT"src/currentSensor.d" -c -o "src/currentSensor.o" "../src/currentSensor.c"
+Finished building: ../src/currentSensor.c
+ 
+Building file: ../src/encoder.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/encoder.d" -MT"src/encoder.d" -c -o "src/encoder.o" "../src/encoder.c"
+Finished building: ../src/encoder.c
+ 
+Building file: ../src/globals.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/globals.d" -MT"src/globals.d" -c -o "src/globals.o" "../src/globals.c"
+Finished building: ../src/globals.c
+ 
+Building file: ../src/kinematics.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/kinematics.d" -MT"src/kinematics.d" -c -o "src/kinematics.o" "../src/kinematics.c"
+Finished building: ../src/kinematics.c
+ 
+Building file: ../src/main.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/main.d" -MT"src/main.d" -c -o "src/main.o" "../src/main.c"
+Finished building: ../src/main.c
+ 
+Building file: ../src/stateMachine.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/stateMachine.d" -MT"src/stateMachine.d" -c -o "src/stateMachine.o" "../src/stateMachine.c"
+Finished building: ../src/stateMachine.c
+ 
+Building file: ../src/timer.c
+Invoking: AVR Compiler
+avr-gcc -I"M:\Workspace\RBELib\include" -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega644p -DF_CPU=18432000UL -MMD -MP -MF"src/timer.d" -MT"src/timer.d" -c -o "src/timer.o" "../src/timer.c"
+Finished building: ../src/timer.c
+ 
+Building target: Lab4.elf
+Invoking: AVR C Linker
+avr-gcc -Wl,-Map,Lab4.map -L"M:\Workspace\RBELib\Release" -mmcu=atmega644p -o "Lab4.elf"  ./src/ADC.o ./src/DAC.o ./src/PID.o ./src/SPI.o ./src/USARTDebug.o ./src/armActuator.o ./src/autoADC.o ./src/currentSensor.o ./src/encoder.o ./src/globals.o ./src/kinematics.o ./src/main.o ./src/stateMachine.o ./src/timer.o   -lm -lRBELib
+Finished building target: Lab4.elf
+ 
+Invoking: AVR Create Extended Listing
+avr-objdump -h -S Lab4.elf  >"Lab4.lss"
+Finished building: Lab4.lss
+ 
+Create Flash image (ihex format)
+avr-objcopy -R .eeprom -O ihex Lab4.elf  "Lab4.hex"
+Finished building: Lab4.hex
+ 
+Create eeprom image (ihex format)
+avr-objcopy -j .eeprom --no-change-warnings --change-section-lma .eeprom=0 -O ihex Lab4.elf  "Lab4.eep"
+Finished building: Lab4.eep
+ 
+Invoking: Print Size
+avr-size --format=avr --mcu=atmega644p Lab4.elf
+AVR Memory Usage
+----------------
+Device: atmega644p
+
+Program:   11312 bytes (17.3% Full)
+(.text + .data + .bootloader)
+
+Data:        544 bytes (13.3% Full)
+(.data + .bss + .noinit)
+
+
+Finished building: sizedummy
+ 
+
+00:20:09 Build Finished (took 7s.486ms)
+

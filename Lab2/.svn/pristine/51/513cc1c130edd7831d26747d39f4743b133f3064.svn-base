@@ -1,0 +1,19 @@
+/*
+ * kinematics.h
+ *
+ *  Created on: Feb 5, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#ifndef KINEMATICS_H_
+#define KINEMATICS_H_
+
+#include "main.h"
+
+#define LOW_LINK_LENGTH 128.016 //mm
+#define HIGH_LINK_LENGTH 102.616 //mm
+
+void calcFPK(float* x, float* y, float lowLinkAngle, float highLinkAngle);
+
+#endif /* KINEMATICS_H_ */

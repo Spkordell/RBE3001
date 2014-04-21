@@ -1,0 +1,20 @@
+19:18:31 **** Incremental Build of configuration Release for project robot_stuff ****
+make all 
+Invoking: Print Size
+avr-size --format=avr --mcu=atmega644p robot_stuff.elf
+AVR Memory Usage
+----------------
+Device: atmega644p
+
+Program:    1032 bytes (1.6% Full)
+(.text + .data + .bootloader)
+
+Data:          4 bytes (0.1% Full)
+(.data + .bss + .noinit)
+
+
+Finished building: sizedummy
+ 
+
+19:18:33 Build Finished (took 2s.176ms)
+

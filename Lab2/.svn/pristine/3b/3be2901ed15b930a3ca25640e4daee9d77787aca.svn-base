@@ -1,0 +1,63 @@
+/*
+* main.h
+*
+* Created on: Jul 4, 2013
+* Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+*/
+#ifndef MAIN_H_
+#define MAIN_H_
+
+//dependencies
+#include "DAC.h"
+#include "PID.h"
+#include "RBELib/RBELib.h"
+#include <avr/io.h>
+#include "autoADC.h"
+#include "globals.h"
+#include "armActuator.h"
+#include "buttonInterrupts.h"
+#include "currentSensor.h"
+#include "math.h"
+#include "kinematics.h"
+#include "shape.h"
+
+//ADC input channels
+#define CURRENT_SENSE_0_ADC 0
+#define CURRENT_SENSE_1_ADC 1
+#define ARM_LOW_LINK_POT 2
+#define ARM_HIGH_LINK_POT 3
+#define KP_POT 4
+#define KI_POT 5
+#define KD_POT 6
+#define SETPOINT_POT 7
+
+//Pid Pot Settings
+#define PID_POT_KP_MULTIPLE .07		//.07
+#define PID_POT_KI_MULTIPLE .05  	//.05
+#define PID_POT_KD_MULTIPLE .005	//.005
+
+//Program operation modes (LAB PART = 'A')
+#define ARM_DATA_MODE 8
+#define DAC_DEMO_MODE 9
+#define DRIVE_ARM_MODE 10
+#define CURRENT_SENSE_MODE 11
+#define PID_MODE_HIGH 12
+#define PID_MODE_LOW 13
+
+//Program operation modes (LAB PART = 'B')
+#define KINEMATICS_DATA_MODE 14
+#define XY_POSITION_MODE 15
+#define DRAW_TRIANGLE_POINT_POINT_MODE 16
+#define DRAW_TRIANGLE_RECORD_MODE 17
+
+#define LAB_PART 'B'
+#define MODE DRAW_TRIANGLE_POINT_POINT_MODE
+
+#define ENABLE_GRAVITY_COMPENSATION 1
+
+//Function prototypes
+void printArmData();
+void printADCValues();
+void printPIDValues();
+void printKinData(float x, float y);
+#endif /* MAIN_H_ */

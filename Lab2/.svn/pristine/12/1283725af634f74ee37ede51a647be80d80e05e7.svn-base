@@ -1,0 +1,17 @@
+/*
+ * armActuator.h
+ *
+ *  Created on: Jan 31, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#ifndef ARMACTUATOR_H_
+#define ARMACTUATOR_H_
+
+#include "main.h"
+
+void driveLink(char whichLink, signed int value);
+void driveLinkPercent(char whichLink, float value);
+
+#endif /* ARMACTUATOR_H_ */

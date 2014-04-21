@@ -1,0 +1,101 @@
+/*
+ * autoADC.c
+ *
+ *  Created on: Jan 22, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+//Function to initialize ADC in freerunmode
+void initFreeRunADC(unsigned char channel) {
+	//disable global interrupts
+	cli();
+
+	//initialize the ADC
+	InitADC(channel);
+
+	//Enable auto trigger
+	ADCSRAbits._ADATE = 1;
+
+	//Set ADC to free run mode
+	ADCSRBbits._ADTS0 = 0;
+	ADCSRBbits._ADTS1 = 0;
+	ADCSRBbits._ADTS2 = 0;
+
+	//Enable ADC interrupts
+	ADCSRAbits._ADIE = 1;
+
+	//Set channel for autoADC
+	ADMUX &= 0b11100000;
+	ADMUX |= channel;
+
+	//Start first conversion, ADC will automatically start subsequent conversions after each is completed
+	ADCSRAbits._ADSC = 1;
+
+	//save ADCMode
+	globals.ADCMode = FREERUN;
+
+	//enable global interrupts
+	sei();
+}
+
+//initialize the ADC to sample based on a timer interrupt
+void initTimedADC(unsigned char channel, float frequency, unsigned short int compare) {
+	//disable global interrupts
+	cli();
+
+	/////////INIT TIMER 1 (the ADC will autotrigger from timer 1)
+	initPWM('B',3,frequency,.5,compare);
+	//Set compare match B
+	OCR1B = compare; //Set comparison value
+	//Enable timer interrupts for CTC mode
+	TIMSK1bits._OCIE1B = 1;
+	//Clear timer compare match flag
+	TIFR1bits._OCF1B = 1;
+
+	//initialize the ADC
+	InitADC(channel);
+
+	//Enable auto trigger
+	ADCSRAbits._ADATE = 1;
+
+	//Set ADC to sample on compare match B trigger from timer 1
+	ADCSRBbits._ADTS0 = 1;
+	ADCSRBbits._ADTS1 = 0;
+	ADCSRBbits._ADTS2 = 1;
+
+	//Enable ADC interrupts
+	ADCSRAbits._ADIE = 1;
+	//Set channel for autoADC
+	ADMUX &= 0b11100000;
+	ADMUX |= channel;
+	//Start first conversion, ADC will automatically start subsequent conversions based on the timer
+	ADCSRAbits._ADSC = 1;
+
+	//configure an output pin to show conversion completion
+	DDRBbits._P0 = OUTPUT;
+
+	//save ADCMode
+	globals.ADCMode = TIMERTRIGGERED;
+
+	//enable global interrupts
+	sei();
+}
+
+
+ISR(TIMER1_COMPB_vect) {
+}
+
+//AutoADC ISR, called when conversion is complete
+ISR(ADC_vect){
+	globals.ADCValue = ADC;
+	if (globals.ADCMode == TIMERTRIGGERED) {
+		/*if (globals.sampleDataAvailable == 1) {
+			print("DATA OVERWRITTEN");
+		}*/
+		globals.sampleDataAvailable = 1;
+		PORTBbits._P0 = ~PORTBbits._P0;
+	}
+}
+

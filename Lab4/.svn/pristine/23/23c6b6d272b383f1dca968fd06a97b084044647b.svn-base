@@ -1,0 +1,113 @@
+/*
+ * main.c
+ *
+ *  Created on: Feb 19, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+Globals globals;
+
+int main() {
+	DebugUSARTInit(DEFAULT_BAUD);
+	initGlobals();
+	println("Chip Reset");
+
+#if MODE == FINAL_PROJECT_MODE
+	TASKSTATE currentState = INITIALIZE;
+	while(1) {
+		engageState(currentState);
+		currentState = updateState(currentState);
+		driveLinks();
+	}
+#endif
+
+#if MODE == IR_DATA_COLLECT_MODE
+	InitADC(THAT_INFARED_SENSOR_THAT_DOES_THAT_THING_WHERE_IT_FINDS_THE_POSITION_OF_THE_BLOCK_HORIZONTALLY_ON_THE_CONVEYER_BELT_TO_SOLVE_THE_INVERSE_kINEMATIC_EQUATIONS_TO_MOVE_THE_ARM_TO_THE_BLOCK_POSITION_WHEN_THE_BLOCK_HITS_THE_INFARED_TRIGGER_SENSOR_FURHTER_DOWN_THE_CONVEYER_BELT);
+	InitADC(IR_TRIGGER);
+	while(1) {
+		p_ul(GetADC(THAT_INFARED_SENSOR_THAT_DOES_THAT_THING_WHERE_IT_FINDS_THE_POSITION_OF_THE_BLOCK_HORIZONTALLY_ON_THE_CONVEYER_BELT_TO_SOLVE_THE_INVERSE_kINEMATIC_EQUATIONS_TO_MOVE_THE_ARM_TO_THE_BLOCK_POSITION_WHEN_THE_BLOCK_HITS_THE_INFARED_TRIGGER_SENSOR_FURHTER_DOWN_THE_CONVEYER_BELT));
+		println(",");
+		p_ul(GetADC(IR_TRIGGER));
+		println("");
+	}
+	//linearization might take the form of (IRCalibration/ (AnalogRead(1) + supplyV)) - 1
+#endif
+
+#if MODE == SERVO_TEST_MODE
+	startConveyer();
+	 while(1);
+#endif
+#if MODE == PRINT_FK_MODE
+	initDAC(); //Initialize the DAC
+	initFreeRunMultiADCChannels((1 << ARM_HIGH_LINK_POT)|(1 << ARM_LOW_LINK_POT)); //Initialize the ADC
+	float x;
+	float y;
+	float theta1;
+	float theta2;
+	while(1) {
+		calcFPK(&x, &y, getLinkAngle('L'), getLinkAngle('H'));
+		p_fl(getLinkAngle('H'));
+		print("\t");
+		p_fl(getLinkAngle('L'));
+		print("\t");
+		p_fl(x);
+		print("\t");
+		p_fl(y);
+		println("");
+	}
+#endif
+	return 0;
+}
+
+//////////////////Helper methods below this point//////////////////////
+
+///State machine control Functions
+void engageState(TASKSTATE currentState) {
+	switch(currentState) {
+		case INITIALIZE:
+			initialize();
+			break;
+		default:
+			println("MISSING STATE ERROR - PROGRAM HALTED");
+			while(1);
+	}
+}
+
+TASKSTATE updateState(TASKSTATE currentState) {
+	switch(currentState) {
+		case INITIALIZE:
+			currentState = READYPOSITION;
+			break;
+		default:
+			println("MISSING STATE ERROR - PROGRAM HALTED");
+			while(1);
+	}
+	return currentState;
+}
+
+///State Specific functions
+void initialize() {
+	startConveyer(); //Start the conveyer belt
+	initDAC(); //Initialize the DAC
+	initPID(0.01); //Initialize PID variables
+	initFreeRunMultiADCChannels((1 << ARM_HIGH_LINK_POT)|(1 << ARM_LOW_LINK_POT)); //Initialize the ADC
+	setConst('H', 30.000, 5.000, 1.000); //Set high link PID Constants
+	setConst('L',45.000, 1.000, 0.200);	//set low link PID Constants
+	setLinkAngle('L',0); //set initial position
+	setLinkAngle('H',0); //set initial position
+	startPID(); //PID controller is now running
+	openGripper(); //Open the gripper
+}
+
+////Additional Helper Functions
+void startConveyer() {
+	SetServo(CONVEYER_SERVO,0);
+}
+void openGripper() {
+	 SetServo(GRIPPER_SERVO,0);
+}
+void closeGripper() {
+	 SetServo(GRIPPER_SERVO,180);
+}

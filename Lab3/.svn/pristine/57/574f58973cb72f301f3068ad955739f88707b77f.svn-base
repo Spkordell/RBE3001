@@ -1,0 +1,17 @@
+/*
+ * main.h
+ *
+ *  Created on: Feb 11, 2014
+ *      Author: Steven Kordell
+ */
+
+#ifndef MAIN_H_
+#define MAIN_H_
+
+#include <avr/io.h>
+#include "RBELib/RBELib.h"
+#include "globals.h"
+#include "accelerometer.h"
+#include "encoder.h"
+
+#endif /* MAIN_H_ */

@@ -1,0 +1,31 @@
+/*
+* globals.h
+*
+* Created on: Feb 6, 2013
+* Author: Steven Kordell, Cody Wall-Epstein, Jiaqi ren
+*
+* Defines and declares the global struct.
+*
+*/
+#ifndef GLOBALS_H_
+#define GLOBALS_H_
+
+#include "main.h"
+
+typedef struct {
+	volatile unsigned short ADCValue;
+	volatile unsigned long int timeStamp;
+	volatile uint8_t sampleDataAvailable;
+	uint8_t PIDTimerMaxCount;
+	volatile uint8_t PIDTimerCurrentCount;
+	volatile uint16_t upperLinkSetPoint;
+	volatile uint16_t armHighLinkPot;
+	uint16_t ADCSampleAllChannels;
+	uint16_t ADCValues[8];
+} Globals;
+
+extern Globals globals; // declaration
+
+void initGlobals();
+
+#endif /* GLOBALS_H_ */

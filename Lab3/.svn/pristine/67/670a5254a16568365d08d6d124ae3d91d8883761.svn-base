@@ -1,0 +1,156 @@
+/*
+ * main.c
+ *
+ *  Created on: Feb 11, 2014
+ *      Author: Steven Kordell
+ */
+
+#include "main.h"
+
+Globals globals;
+
+int main() {
+	DebugUSARTInit(DEFAULT_BAUD);
+	initGlobals();
+	println("Chip Reset");
+
+#if MODE == PRINT_ACCEL_VALUES
+	initAccelerometerWithTimer();
+	//TODO: To test if init worked, try printing accel.vref. Should be about 2045.
+	p_ul(accel.vref);
+	println("");
+	while(1) {
+		if(accel.newDataAvailable) {
+			accel.newDataAvailable = 0;
+			// raw counts
+			p_ul(accel.vref);
+			print("\t");
+			p_ul(accel.x);
+			print("\t");
+			p_ul(accel.y);
+			print("\t");
+			p_ul(accel.z);
+			println("");
+		}
+	}
+#endif
+
+#if MODE == PRINT_ENCODER_VALUES
+	initEncoders();
+	while(1) {
+		p_sl(encoderCounts('H'));
+		print("\t");
+		p_sl(encoderCounts('L'));
+		println("");
+	}
+#endif
+
+#if MODE == ENCODER_MOTOR_MODE
+	println("Press \"s\" to start collecting data."); println("");
+	while (USART_Receive() != 's');
+	initDAC();
+	configureButtonInterrupts();
+	initEncoders();
+	driveLink('H',0);
+	driveLink('L',0);
+	globals.timer2MaxCount = ((float)F_CPU/((unsigned long)240*256))*((float)1/100); // = 3 for CTC = 240, prescale = 256, and frequency = 100
+	globals.timer2CurrentCount = 0;
+	InitTimer(2,CTC,240);
+	//change prescaler to 256
+	TCCR2Bbits._CS22 = 1;
+	TCCR2Bbits._CS21 = 1;
+	TCCR2Bbits._CS20 = 0;
+	while(1) {
+		driveLinks();
+		if (globals.timer2Triggered) {
+			globals.timer2Triggered = 0;
+			p_sl(encoderCounts('H'));
+			println("");
+		}
+	}
+#endif
+
+#if MODE == HOMING_MODE
+	initDAC();
+	DDRCbits._P7 = INPUT;
+	initPID(0.01); //Initialize the PID variables
+	initFreeRunMultiADCChannels((1 << ARM_HIGH_LINK_POT)|(1 << ARM_LOW_LINK_POT));
+	setConst('H', 30.000, 5.000, 1.000); //Set high link PID Constants
+	setConst('L',45.000, 1.000, 0.200);	//set low link PID Constants
+	//set initial position
+	setLinkAngle('L',0);
+	setLinkAngle('H',0);
+	startPID(); //Starts the timer and begins the PID operations
+
+	//Start a timer for regular data sampling
+	globals.timer2MaxCount = ((float)F_CPU/((unsigned long)240*256))*((float)1/100); // = 3 for CTC = 240, prescale = 256, and frequency = 100
+	globals.timer2CurrentCount = 0;
+	InitTimer(2,CTC,240);
+	//change prescaler to 256
+	TCCR2Bbits._CS22 = 1;
+	TCCR2Bbits._CS21 = 1;
+	TCCR2Bbits._CS20 = 0;
+
+	initEncoders();
+	initAccelerometer();
+
+	while(PINCbits._P7){
+		driveLinks();//wait for button press
+	}
+	while(!PINCbits._P7){
+		driveLinks(); //wait for button release
+	}
+
+	setLinkAngle('H',90);
+
+	while(1) {
+		driveLinks();
+		if (globals.timer2Triggered) {
+			globals.timer2Triggered = 0;
+			p_sl(encoderCounts('H'));
+			print("\t");
+			p_ul(ADCVars.ADCValues[ARM_HIGH_LINK_POT]);
+			print("\t");
+			p_ul(GetAccelerationH48C('x'));
+			print("\t");
+			p_ul(GetAccelerationH48C('y'));
+			print("\t");
+			p_ul(GetAccelerationH48C('z'));
+			println("");
+		}
+		if(!PINCbits._P7) { //if we press a button, home the arm
+			println("homing");
+			homeArm();
+		}
+	}
+
+#endif
+
+	return 0;
+}
+
+#if MODE == ENCODER_MOTOR_MODE
+ISR(PCINT2_vect) {
+
+	if(!PINCbits._P7) {
+		driveLink('H',0);
+	}
+	if(!PINCbits._P6) {
+		driveLinkPercent('H',(float)-3/MOTOR_VOLTAGE); //-3V
+	}
+	if(!PINCbits._P3) {
+		driveLinkPercent('H',(float)3/MOTOR_VOLTAGE); //+3V
+	}
+	if(!PINCbits._P2) {
+		driveLinkPercent('H',(float)6/MOTOR_VOLTAGE); //+6V
+	}
+}
+#endif
+
+ISR(TIMER2_COMPA_vect) {
+	if(globals.timer2CurrentCount >= globals.timer2MaxCount) {
+		globals.timer2CurrentCount = 0;
+		globals.timer2Triggered = 1;
+	}
+	globals.timer2CurrentCount++;
+}

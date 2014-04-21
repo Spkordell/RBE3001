@@ -1,0 +1,42 @@
+/*
+ * main.h
+ *
+ *  Created on: Feb 11, 2014
+ *      Author: Steven Kordell
+ */
+
+#ifndef MAIN_H_
+#define MAIN_H_
+
+//Dependencies
+#include "DAC.h"
+#include "PID.h"
+#include <avr/io.h>
+#include <stdio.h>
+#include <math.h>
+#include "RBELib/RBELib.h"
+#include "globals.h"
+#include "autoADC.h"
+#include "accelerometer.h"
+#include "encoder.h"
+#include "buttonInterrupts.h"
+#include "armActuator.h"
+#include "kinematics.h"
+
+//Constants
+#define MOTOR_VOLTAGE 12
+
+//ADC Input Channels
+#define ARM_LOW_LINK_POT 2
+#define ARM_HIGH_LINK_POT 3
+
+//Program Modes
+#define PRINT_ACCEL_VALUES 0
+#define PRINT_ENCODER_VALUES 1
+#define ENCODER_MOTOR_MODE 3
+#define HOMING_MODE 4
+
+#define MODE 4
+
+
+#endif /* MAIN_H_ */

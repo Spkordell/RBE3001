@@ -1,0 +1,39 @@
+/*
+ * stateMachine.h
+ *
+ *  Created on: Mar 2, 2014
+ *      Author: spkordell
+ */
+
+#ifndef STATEMACHINE_H_
+#define STATEMACHINE_H_
+
+#include "main.h"
+
+//Create enum to store states of state machine
+typedef enum {
+   INITIALIZE,
+   READY_ARM,
+   WAIT_FOR_BLOCK,
+   WAIT_FOR_BLOCK_NOISE_CHECK,
+   PREP_FOR_PICKUP,
+   WAIT_FOR_RISING_TRIGGER,
+   WAIT_FOR_FALLING_TRIGGER,
+   MOVE_TO_PICKUP,
+   GRAB_BLOCK,
+   PICKUP_BLOCK,
+   DETERMINE_WEIGHT,
+   MOVE_TO_SORT,
+   DROP_TO_SORT
+} TASKSTATE;
+
+
+////State machine control Functions
+void engageState(TASKSTATE currentState);
+TASKSTATE updateState(TASKSTATE currentState);
+void printState(TASKSTATE currentState);
+
+void setStateDelayTimer(float period);
+void stopStateDelayTimer();
+
+#endif /* STATEMACHINE_H_ */

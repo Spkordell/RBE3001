@@ -1,0 +1,30 @@
+/*
+ * accelerometer.h
+ *
+ *  Created on: Feb 12, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#ifndef ACCELEROMETER_H_
+#define ACCELEROMETER_H_
+
+#include "main.h"
+
+#define ACCEL_SS 5 //PORT C
+
+typedef struct {
+	volatile uint16_t x;
+	volatile uint16_t y;
+	volatile uint16_t z;
+	volatile uint8_t newDataAvailable;
+	volatile uint8_t timerMaxCount;
+	volatile uint8_t timerCurrentCount;
+} Accel;
+
+extern Accel accel;
+
+void initAccelerometer();
+uint16_t GetAccelerationH48C(char axis);
+
+#endif /* ACCELEROMETER_H_ */

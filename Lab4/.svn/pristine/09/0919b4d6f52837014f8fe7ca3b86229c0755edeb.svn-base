@@ -1,0 +1,83 @@
+/*
+ * main.h
+ *
+ *  Created on: Feb 19, 2014
+ *      Author: Steven Kordell
+ */
+
+#ifndef MAIN_H_
+#define MAIN_H_
+
+//Dependencies
+#include "DAC.h"
+#include "PID.h"
+#include <avr/io.h>
+#include <math.h>
+#include "RBELib/RBELib.h"
+#include "globals.h"
+#include "autoADC.h"
+#include "encoder.h"
+#include "kinematics.h"
+#include "armActuator.h"
+
+//Constants
+#define MOTOR_VOLTAGE 12
+
+//ADC Input Channels
+
+#define ARM_LOW_LINK_POT 2
+#define ARM_HIGH_LINK_POT 3
+#define BLOCK_SENSE_IR 4
+#define TRIGGER_IR 5
+
+//Servo Channels
+#define CONVEYER_SERVO 0
+#define GRIPPER_SERVO 1
+
+//special arm configurations
+#define HIGH_LINK_DEFAULT_ANGLE 0 //TODO: find this
+#define LOW_LINK_DEFAULT_ANGLE 0  //TODO: find this
+#define DEFAULT_X_POSITION 0 //TODO: find this
+#define DEFUALT_Y_POSITION 0 //TODO: find this
+#define HEIGHT_ABOVE_BLOCK 0 //TODO: measure this
+
+//miscellaneous constants
+#define MIN_BLOCK_DETECTION_THRESHOLD 20
+#define IR_POSITION_OFFSET 0 //cm, distance IR is from the arm //TODO: measure this
+#define DISTANCE_MEASURE_DELAY 240 //Time (arbitrary units) after detecting block to perform distance measurement
+
+//Program Modes
+#define IR_DATA_COLLECT_MODE 0
+#define SERVO_TEST_MODE 1
+#define PRINT_FK_MODE 2
+#define FINAL_PROJECT_MODE 3
+
+#define MODE 3
+
+//Create enum to store states of state machine
+typedef enum {
+   INITIALIZE,
+   READY_ARM,
+   WAIT_FOR_BLOCK,
+   PREP_FOR_PICKUP,
+   WAIT_FOR_RISING_TRIGGER,
+   WAIT_FOR_FALLING_TRIGGER,
+   MOVE_TO_PICKUP
+} TASKSTATE;
+
+///////////////////function prototypes///////////////////
+
+////State machine control Functions
+void engageState(TASKSTATE currentState);
+TASKSTATE updateState(TASKSTATE currentState);
+
+////State Specific functions
+void initialize();
+
+////Additional Helper functions
+void startConveyer();
+void openGripper();
+void closeGripper();
+float IRDistance(uint16_t IRValue);
+
+#endif /* MAIN_H_ */

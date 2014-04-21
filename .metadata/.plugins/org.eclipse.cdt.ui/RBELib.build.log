@@ -1,0 +1,31 @@
+19:18:26 **** Incremental Build of configuration Release for project RBELib ****
+make all 
+Invoking: Print Size
+avr-size --format=avr --mcu=atmega644p libRBELib.a
+AVR Memory Usage
+----------------
+Device: atmega644p
+
+Program:     538 bytes (0.8% Full)
+(.text + .data + .bootloader)
+
+Data:         14 bytes (0.3% Full)
+(.data + .bss + .noinit)
+
+
+AVR Memory Usage
+----------------
+Device: atmega644p
+
+Program:     975 bytes (1.5% Full)
+(.text + .data + .bootloader)
+
+Data:         37 bytes (0.9% Full)
+(.data + .bss + .noinit)
+
+
+Finished building: sizedummy
+ 
+
+19:18:29 Build Finished (took 2s.393ms)
+

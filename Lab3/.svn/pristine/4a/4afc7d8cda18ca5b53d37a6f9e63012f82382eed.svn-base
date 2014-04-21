@@ -1,0 +1,104 @@
+/*
+ * accelerometer.c
+ *
+ *  Created on: Feb 12, 2014
+ *      Author: Steven Kordell
+ */
+
+
+#include "main.h"
+
+Accel accel;
+
+
+//Useful documentation
+//https://my.wpi.edu/bbcswebdav/pid-276133-dt-content-rid-1385566_1/courses/RBE3001-C14-MASTER/accelerometer_module_schematic%282%29.pdf
+//http://ww1.microchip.com/downloads/en/DeviceDoc/21298c.pdf
+//https://my.wpi.edu/bbcswebdav/pid-276133-dt-content-rid-1385573_1/courses/RBE3001-C14-MASTER/HitachiH48C3AxisAccelerometer.pdf
+void initAccelerometerWithTimer() {
+	accel.newDataAvailable = 0;
+	//Initialize SPI
+	GenericSPIInit();
+	//Set SS to output
+	DDRD |=  (1 << ACCEL_SS);
+	//set SS high
+	PORTD |= (1 << ACCEL_SS);
+
+	//Set timer to sample at 500 hz
+	accel.timerMaxCount = ((float)F_CPU/((unsigned long)180*256))*((float)1/400); // = 1 for CTC = 180, prescale = 256, and frequency = 500
+	accel.timerCurrentCount = 0;
+	InitTimer(0,CTC,180);
+	//adjust the prescaler to F_CPU/256
+	TCCR0Bbits._CS02 = 1;
+	TCCR0Bbits._CS01 = 0;
+	TCCR0Bbits._CS00 = 0;
+}
+
+void initAccelerometer() {
+	accel.newDataAvailable = 0;
+	//Initialize SPI
+	GenericSPIInit();
+	//Set SS to output
+	DDRD |=  (1 << ACCEL_SS);
+	//set SS high
+	PORTD |= (1 << ACCEL_SS);
+
+	/*
+	//Read vref
+	PORTD &= ~(1 << ACCEL_SS);
+	SPITransceive(0b110);
+	accel.vref = (SPITransceive(4 << 6) & 0x0F) << 8;
+	accel.vref |= SPITransceive(0x00);
+	PORTD |= (1 << ACCEL_SS);
+	*/
+}
+
+//Reads 12-bit data from the H48C accelerometer module.
+int16_t GetAccelerationH48C(char axis) {
+	if (axis == 'x') {
+		axis = 0;
+	} else if (axis == 'y') {
+		axis = 1;
+	} else if (axis == 'z') {
+		axis = 2;
+	} else if (axis == 'v') {
+		axis = 3;
+	} else {
+		return 0;
+	}
+	int16_t result;
+	PORTD &= ~(1 << ACCEL_SS);
+
+	SPITransceive(0b110);
+	result = (SPITransceive(axis << 6) & 0x0F) << 8;
+	result |= SPITransceive(0x00);
+
+	PORTD |= (1 << ACCEL_SS);
+	return result;
+}
+
+float convertAccelmV(int16_t accelValue) {
+	return pow(accelValue,Cnt2Mv);
+}
+
+float convertAccelGforce(int16_t accelValue) {
+	if (accelValue >= accel.vref) {
+		return pow(accelValue - accel.vref,GfCnv); // positive g-force
+	} else {
+		return -pow(accel.vref - accelValue,GfCnv); // negative g-force
+	}
+}
+
+ISR(TIMER0_COMPA_vect) {
+	if(accel.timerCurrentCount >= accel.timerMaxCount) {
+		accel.timerCurrentCount = 0;
+		//read in each axis and save the data
+		accel.vref = GetAccelerationH48C('v');
+		accel.x = GetAccelerationH48C('x');
+		accel.y = GetAccelerationH48C('y');
+		accel.z = GetAccelerationH48C('z');
+		//Set a flag to alert that new Data is available
+		accel.newDataAvailable = 1;
+	}
+	accel.timerCurrentCount++;
+}
